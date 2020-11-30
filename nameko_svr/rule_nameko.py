@@ -3,6 +3,7 @@ __author__ = 'wanghaiquan'
 import eventlet
 import os
 import sys
+import json
 from threading import Timer
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -35,8 +36,8 @@ class RuleService:
 
     #=============service=========================
     '''添加规则
-    payload=
-    '{
+    param=
+    {
         "rules":[
             {
                 "uuid":"",
@@ -64,16 +65,17 @@ class RuleService:
                 "script":""
             }
         ]
-    }'
+    }
     '''
     @rpc
-    def add_rule(self, payload:str)->int:
+    def add_rule(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call add_rule: %s'%(payload))
-        return RuleMng.add_rule(payload)
+        return RuleMng.add_rule(**param)
 
     '''更新规则
-    payload=
-    '{
+    param=
+    {
         "rules":[
             {
                 "uuid":"",
@@ -101,20 +103,21 @@ class RuleService:
                 "script":""
             }
         ]
-    }'
+    }
     '''
     @rpc
-    def update_rule(self, payload:str)->int:
+    def update_rule(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call update_rule: %s'%(payload))
-        return RuleMng.update_rule(payload)
+        return RuleMng.update_rule(**param)
 
     '''获取指定uuid的规则
     入参 payload =
-    '{
+    {
         "uuids":[
             "uuid1","uuid2"
         ]
-    }'
+    }
     返回 1. 结果码
         2. 规则列表
         [
@@ -146,9 +149,10 @@ class RuleService:
         ]
     '''
     @rpc
-    def get_rule_by_uuid(self, payload:str)->(int, list):
+    def get_rule_by_uuid(self, **param)->(int, list):
+        payload = json.dumps(param)
         MyLog.key('rpc call get_rule_by_uuid: %s'%(payload))
-        return RuleMng.get_rule_by_uuid(payload)
+        return RuleMng.get_rule_by_uuid(**param)
 
     '''获取所有uuid的规则
     返回 1. 结果码
@@ -187,17 +191,18 @@ class RuleService:
         return RuleMng.get_all_rules()
 
     '''删除指定uuid的规则
-        payload=
-        '{
+        param=
+        {
             "uuids":[
                 "uuid1","uuid2"
             ]
-        }'
+        }
     '''
     @rpc
-    def delete_rule_by_uuid(self, payload:str)->int:
+    def delete_rule_by_uuid(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call delete_rule_by_uuid: %s'%(payload))
-        return RuleMng.delete_rule_by_uuid(payload)
+        return RuleMng.delete_rule_by_uuid(**param)
 
 
     '''清空所有规则'''
@@ -207,7 +212,7 @@ class RuleService:
         return RuleMng.clear_all_rule()
 
     '''设置规则可用
-        payload=
+        param=
         '{
             "uuids":[
                 "uuid1","uuid2"
@@ -215,40 +220,43 @@ class RuleService:
         }'
     '''
     @rpc
-    def enable_rule(self, payload:str)->int:
+    def enable_rule(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call enable_rule: %s'%(payload))
-        return RuleMng.enable_rule(payload)
+        return RuleMng.enable_rule(**param)
 
     '''设置规则不可用
-        payload=
-        '{
+        param=
+        {
             "uuids":[
                 "uuid1","uuid2"
             ]
-        }'
+        }
     '''
     @rpc
-    def disable_rule(self, payload:str)->int:
+    def disable_rule(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call disable_rule: %s'%(payload))
-        return RuleMng.disable_rule(payload)
+        return RuleMng.disable_rule(**param)
 
     '''停止联动规则执行
-        payload=
-        '{
+        param=
+        {
             "uuids":[
                 "uuid1","uuid2"
             ]
-        }'
+        }
     '''
     @rpc
-    def stop_linkage_rule_running(self, payload)->int:
+    def stop_linkage_rule_running(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call stop_linkage_rule_running: %s'%(payload))
         #删除指令列表中指定uuid的指令
-        return RuleMng.stop_linkage_rule_running(payload)
+        return RuleMng.stop_linkage_rule_running(**param)
 
     '''外部联动
-    payload=
-    '{
+    param=
+    {
         "services":[
             {
                 "uuid":"",
@@ -256,33 +264,35 @@ class RuleService:
                 "script":""
             }
         ]
-    }'
+    }
     '''
     @rpc
-    def outside_linkage(self, payload)->int:
+    def outside_linkage(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call outside_linkage: %s'%(payload))
         #添加联动指令到指令列表
-        return RuleMng.outside_linkage(payload)
+        return RuleMng.outside_linkage(**param)
 
     '''临时手动
-    payload=
-    '{
+    param=
+    {
         "services":[
             {
                 "priority": 55,
                 "script":""
             }
         ]
-    }'
+    }
     '''
     @rpc
-    def manual_control(self, payload)->int:
+    def manual_control(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call manual_control: %s'%(payload))
-        return RuleMng.manual_control(payload)
+        return RuleMng.manual_control(**param)
 
     '''
-    payload=
-    '{
+    param=
+    {
         "services":[
             {
                 "productId":"",
@@ -290,13 +300,14 @@ class RuleService:
                 "service":""
             }
         ]
-    }'
+    }
     '''
     @rpc
-    def stop_manual_control(self, payload)->int:
+    def stop_manual_control(self, **param)->int:
+        payload = json.dumps(param)
         MyLog.key('rpc call stop_manual_control: %s'%(payload))
         # 删除指令队列中指定方法类型为manual的指令。
-        return RuleMng.stop_manual_control(payload)
+        return RuleMng.stop_manual_control(**param)
 
 
     '''
