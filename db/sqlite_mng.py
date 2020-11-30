@@ -16,6 +16,8 @@ from log.log import MyLog
 class SqliteMng:
     def __init__(self):
         if not hasattr(SqliteMng, "__sqlite_eng"):
+            if not os.path.exists(RULE_SQLITE3_FILE_PATH):
+                os.makedirs(RULE_SQLITE3_FILE_PATH)
             database = "sqlite:///%s?check_same_thread=False"%(RULE_SQLITE3_FILE_PATH)
             self.__sqlite_eng = create_engine(database, encoding = 'utf-8', echo = False)
             create_all_tbl(self.__sqlite_eng)
