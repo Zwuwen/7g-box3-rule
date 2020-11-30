@@ -1,5 +1,6 @@
 '''sqlite'''
-RULE_SQLITE3_FILE_PATH = "/data/db/rule/rule.db"
+RULE_SQLITE3_FILE_PATH = "/data/db/rule/"
+RULE_SQLITE3_FILE_NAME = "rule.db"
 '''redis'''
 RULE_REDIS_HOST = "127.0.0.1"
 RULE_REDIS_PORT = 6379

@@ -9,7 +9,7 @@ cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
 sys.path.append(pre_dir)
-from config import RULE_SQLITE3_FILE_PATH
+from config import RULE_SQLITE3_FILE_PATH, RULE_SQLITE3_FILE_NAME
 from db.sqlite_create import *
 from log.log import MyLog
 
@@ -18,7 +18,7 @@ class SqliteMng:
         if not hasattr(SqliteMng, "__sqlite_eng"):
             if not os.path.exists(RULE_SQLITE3_FILE_PATH):
                 os.makedirs(RULE_SQLITE3_FILE_PATH)
-            database = "sqlite:///%s?check_same_thread=False"%(RULE_SQLITE3_FILE_PATH)
+            database = "sqlite:///%s?check_same_thread=False"%(RULE_SQLITE3_FILE_PATH + RULE_SQLITE3_FILE_NAME)
             self.__sqlite_eng = create_engine(database, encoding = 'utf-8', echo = False)
             create_all_tbl(self.__sqlite_eng)
             self.__session_class = sessionmaker(bind = self.__sqlite_eng)
@@ -208,7 +208,7 @@ class SqliteMng:
             current_date = datetime.date.today()
             current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")
             str_date = '当前日期: ' + str(current_date)
-            str_time = '当前日期: ' + str(current_time)
+            str_time = '当前时间: ' + str(current_time)
             MyLog.info(str_date)
             MyLog.info(str_time)
             rule_filter = {
