@@ -320,3 +320,10 @@ class RuleService:
         MyLog.logger.debug(msg)
         timer = Timer(0, RuleMng.run_linkage_rule_by_devid, [dev_id])
         timer.start()
+
+    '''
+    设置规则引擎日志打印级别
+    '''
+    @rpc
+    def set_log_level(self, level)->None:
+        MyLog.set_level(level)

@@ -61,6 +61,11 @@ class MyLog:
 
         return True
 
+    @classmethod
+    def set_level(cls, level):
+        if level in g_logLevel.keys():
+            cls.logger.setLevel(g_logLevel[level])
+
     @staticmethod
     def color_red(msg):
         return '\033[31m' + msg + '\033[0m'

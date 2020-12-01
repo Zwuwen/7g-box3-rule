@@ -10,4 +10,4 @@ RULE_PY_SCRIPT_FOLDER = "/userdata/rule/py"
 RULE_PY_MODEL_PATH = "userdata.rule.py."
 '''log'''
 RULE_LOG_PATH = "/userdata/logs/rule"
-RULE_LOG_LEVEL = "debug"
+RULE_LOG_LEVEL = "info"
