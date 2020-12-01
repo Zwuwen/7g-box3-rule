@@ -52,10 +52,3 @@ class RedisHandle:
         if r:
             return r.delete(key)
         return None
-
-import time
-if __name__ == "__main__":
-    r = RedisHandle()
-    mapping = {"value1":1, "value2":2, "value3":3}
-    r.hmset_value("hm", mapping)
-    print(r.hmget_value("hm", "value1"))

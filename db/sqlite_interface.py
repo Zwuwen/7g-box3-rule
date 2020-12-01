@@ -76,33 +76,3 @@ class SqliteInterface:
     @classmethod
     def get_current_linkage_rule_by_src_devid(cls, src_dev_id)->list:
         return cls.__sql.get_current_linkage_rule_by_src_devid(src_dev_id)
-
-if __name__ == "__main__":
-    from common.time_compare import quite_sort_time_list
-    js = '''if (ref("productId.devId.properties.property1[0].brightness") > 1 && ref("productId.devId.properties.property2") < 1 && ref("productId.devId.events.event")) {
-    call_service("productId.devId.services.service", "param1");
-} else {
-    raise_event("productId.another_devId.events.event", "param1");
-}'''
-    date_list = [{"startDate":"2020-10-01", "endDate":"2020-10-07"},{"startDate":"2020-10-10", "endDate":"2020-10-11"}]
-    time_list = [{"startTime":"00:00:00", "endTime":"08:00:00"},{"startTime":"21:00:00", "endTime":"23:00:00"}]
-    src_dev_list = ["s1", "s2"]
-    dst_dev_list = ["d1", "d2"]
-    SqliteInterface.add_rule("1111", True, "timer", 99, date_list, time_list, src_dev_list, dst_dev_list, "./rule.js", "./rule.py")
-
-    date_list2 = [{"startDate":"2020-10-01", "endDate":"2020-10-28"},{"startDate":"2020-11-01", "endDate":"2020-11-07"}]
-    time_list2 = [{"startTime":"20:00:00", "endTime":"23:00:00"}, {"startTime":"10:00:00", "endTime":"15:00:00"}]
-    src_dev_list2 = ["s3", "s4"]
-    dst_dev_list2 = ["d3", "d4"]
-    SqliteInterface.add_rule("222", True, "timer", 99, date_list2, time_list2, src_dev_list2, dst_dev_list2, "./rule.js", "./rule.py")
-    uuid_list = SqliteInterface.get_current_timer_rule()
-    for uuid in uuid_list:
-        print(uuid)
-
-    rule_time_list = SqliteInterface.get_current_timer_rule()
-
-    quite_sort_time_list(rule_time_list, 0, len(rule_time_list)-1)
-    for time in rule_time_list:
-        print(time)
-    
-    #SqliteInterface.delete_rule("1111")

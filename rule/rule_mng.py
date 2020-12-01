@@ -126,49 +126,41 @@ class RuleMng:
             return 0, 0
 
     '''添加规则
-    param=
-    {
-        "rules":[
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
-    }
+    rules = [
+        {
+            "uuid":"",
+            "enable": true,
+            "type": "timer",
+            "priority": 55,
+            "date":[
+                {
+                    "startDate":"2020-10-01",
+                    "endDate":"2020-10-08"
+                }
+            ],
+            "time":[
+                {
+                    "startTime":"00:00:00",
+                    "endTime":"18:00:00"
+                }
+            ],
+            "srcDevice":[
+                "s1","s2"
+            ],
+            "dstDevice":[
+                "d1","d2"
+            ],
+            "script":""
+        }
+    ]
     '''
     @classmethod
-    def add_rule(cls, **param)->int:
+    def add_rule(cls, rules)->int:
         try:
             keys = {'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate', 'time', "time.startTime", "time.endTime",
              'dstDevice', 'script'}
-            if 'rules' not in param:
-                #返回参数错误
-                msg = MyLog.color_red('key param not exist')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
 
-            for rule_dict in param['rules']:
+            for rule_dict in rules:
                 if SqliteInterface.rule_exist(rule_dict['uuid']):
                     msg = MyLog.color_red("rule(%s) has exist"%(rule_dict['uuid']))
                     MyLog.logger.error(msg)
@@ -211,12 +203,11 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''获取指定uuid的规则
-    入参 param =
-    {
-        "uuids":[
+    入参
+        uuids = [
             "uuid1","uuid2"
         ]
-    }
+
     返回 1. 结果码
         2. 规则列表
         [
@@ -248,16 +239,10 @@ class RuleMng:
         ]
     '''
     @classmethod
-    def get_rule_by_uuid(cls, **param)->(int, list):
+    def get_rule_by_uuid(cls, uuids)->(int, list):
         try:
-            keys = {'uuids'}
-            if not cls.__check_keys_exists(param, keys):
-                #返回参数错误
-                msg = MyLog.color_red('get_rule_by_uuid param error')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value, None
             rule_list = []
-            for uuid in param['uuids']:
+            for uuid in uuids:
                 rule_dict = {}
                 ret, get_rule_dict = SqliteInterface.get_rule(uuid)
                 if ret:
@@ -342,26 +327,17 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeHandleSqlFailure.value, None
 
     '''删除指定uuid的规则
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @classmethod
-    def delete_rule_by_uuid(cls, **param)->int:
+    def delete_rule_by_uuid(cls, uuids)->int:
         try:
-            keys = {'uuids'}
-            if not cls.__check_keys_exists(param, keys):
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
             #数据库删除规则
-            SqliteInterface.delete_rule(param['uuids'])
+            SqliteInterface.delete_rule(uuids)
             #删除规则脚本
-            for uuid in param['uuids']:
+            for uuid in uuids:
                 js_path = RULE_JS_SCRIPT_FOLDER + "/" + uuid + '.js'
                 py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
                 pyc_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.pyc'
@@ -369,8 +345,8 @@ class RuleMng:
                 os.remove(py_path)
                 os.remove(pyc_path)
             #从正在运行的队列中删除
-            remove_running_rule_endtime(param['uuids'])
-            DevCommandQueueMng.clear_command_by_rule_uuid(param['uuids'])
+            remove_running_rule_endtime(uuids)
+            DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
             #规则决策
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
@@ -378,50 +354,43 @@ class RuleMng:
             MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
-    '''添加规则
-    param=
-    '{
-        "rules":[
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
-    }'
+    '''更新规则
+    rules = [
+        {
+            "uuid":"",
+            "enable": true,
+            "type": "timer",
+            "priority": 55,
+            "date":[
+                {
+                    "startDate":"2020-10-01",
+                    "endDate":"2020-10-08"
+                }
+            ],
+            "time":[
+                {
+                    "startTime":"00:00:00",
+                    "endTime":"18:00:00"
+                }
+            ],
+            "srcDevice":[
+                "s1","s2"
+            ],
+            "dstDevice":[
+                "d1","d2"
+            ],
+            "script":""
+        }
+    ]
     '''
     @classmethod
-    def update_rule(cls, **param)->int:
+    def update_rule(cls, rules)->int:
         try:
             keys = {'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate', 'time', "time.startTime", "time.endTime",
              'dstDevice', 'script'}
-            if 'rules' not in param:
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
+
             uuid_list = []
-            for rule_dict in param['rules']:
+            for rule_dict in rules:
                 if not cls.__check_keys_exists(rule_dict, keys):
                     #返回参数错误
                     msg = MyLog.color_red('必要参数不存在')
@@ -451,7 +420,7 @@ class RuleMng:
             DevCommandQueueMng.clear_command_by_rule_uuid(uuid_list)
 
             #重新添加规则
-            ret = RuleMng.add_rule(param)
+            ret = RuleMng.add_rule(rules)
             return ret
         except Exception as e:
             msg = MyLog.color_red('update_rule has except: ' + str(e))
@@ -480,22 +449,15 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''设置规则可用
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @classmethod
-    def enable_rule(cls, **param):
+    def enable_rule(cls, uuids):
         try:
-            keys = {'uuids'}
-            if not cls.__check_keys_exists(param, keys):
-                #返回参数错误
-                return g_retValue.qjBoxOpcodeInputParamErr.value
             #更新数据库
-            SqliteInterface.set_rule_enable(param['uuids'])
+            SqliteInterface.set_rule_enable(uuids)
             #规则决策
             RuleMng.start_new_rule_decision_timer(0)
             return g_retValue.qjBoxOpcodeSucess.value
@@ -505,28 +467,19 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''设置规则不可用
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @classmethod
-    def disable_rule(cls, **param)->int:
+    def disable_rule(cls, uuids)->int:
         try:
-            keys = {'uuids'}
-            if not cls.__check_keys_exists(param, keys):
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
             #数据库删除规则
-            SqliteInterface.set_rule_disable(param['uuids'])
+            SqliteInterface.set_rule_disable(uuids)
 
             #从正在运行的队列中删除
-            remove_running_rule_endtime(param['uuids'])
-            DevCommandQueueMng.clear_command_by_rule_uuid(param['uuids'])
+            remove_running_rule_endtime(uuids)
+            DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
 
             #规则决策
             RuleMng.start_new_rule_decision_timer(0)
@@ -582,15 +535,10 @@ class RuleMng:
 
     #停止联动规则执行
     @classmethod
-    def stop_linkage_rule_running(cls, **param)->int:
+    def stop_linkage_rule_running(cls, uuids)->int:
         try:
-            keys = {'uuids'}
-            if not cls.__check_keys_exists(param, keys):
-                #返回参数错误
-                return g_retValue.qjBoxOpcodeInputParamErr.value
-
-            DevCommandQueueMng.clear_command_by_rule_uuid(param['uuids'])
-            remove_running_rule_endtime(param['uuids'])
+            DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
+            remove_running_rule_endtime(uuids)
             DevCommandQueueMng.all_dev_exe()
 
             return g_retValue.qjBoxOpcodeSucess.value
@@ -600,27 +548,19 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''外部联动
-    param=
-    {
-        "services":[
+    services = [
             {
                 "uuid":"",
                 "priority": 55,
                 "script":""
             }
         ]
-    }
     '''
     @classmethod
-    def outside_linkage(cls, **param)->int:
+    def outside_linkage(cls, services)->int:
         try:
             keys = {'uuid', 'priority', 'script'}
-            if 'services' not in param:
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
-            for service_dict in param['services']:
+            for service_dict in services:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
                     msg = MyLog.color_red('必要参数不存在')
@@ -675,29 +615,19 @@ class RuleMng:
 
 
     '''临时手动
-    param=
-    {
-        "services":[
+    services = [
             {
                 "priority": 55,
-                "time": 10
                 "script":""
             }
         ]
-    }
     '''
     #临时手动
     @classmethod
-    def manual_control(cls, **param)->int:
+    def manual_control(cls, services)->int:
         try:
             keys = {'priority', 'script'}
-            if 'services' not in param:
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
-
-            for service_dict in param['services']:
+            for service_dict in services:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
                     msg = MyLog.color_red('必要参数不存在')
@@ -735,29 +665,21 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''
-    param=
-    {
-        "services":[
+    停止临时手动控制
+    services = [
             {
                 "productId":"",
                 "devId":"",
                 "service":""
             }
         ]
-    }
     '''
     @classmethod
-    def stop_manual_control(cls, **param)->int:
+    def stop_manual_control(cls, services)->int:
         try:
             keys = {'productId', 'devId', 'service'}
-            if 'services' not in param:
-                #返回参数错误
-                msg = MyLog.color_red('必要参数不存在')
-                MyLog.logger.error(msg)
-                return g_retValue.qjBoxOpcodeInputParamErr.value
-
             dev_id_list = []
-            for service_dict in param['services']:
+            for service_dict in services:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
                     msg = MyLog.color_red('必要参数不存在')
@@ -832,58 +754,3 @@ class RuleMng:
             g_rule_timer.cancel()
         g_rule_timer = Timer(ts, RuleMng.timer_rule_decision)
         g_rule_timer.start()
-
-
-if __name__ == "__main__":
-    js = '''if (#duration("productId.devId.events.traffic") < 5 && #ref("productId.devId.events.traffic.type") < 10 && #ref("productId.devId.properties.bri") < 50) {
-    #call_service("productId.devId1.services.service1", duration = 0, p1="param1", p2=1, p3=2);
-    #call_service("productId.devId2.services.service2", duration = 0, p1="param2", p2='p2', p4=3);
-    #call_service("productId.devId3.services.service3", duration = 0, p1="param3", p2=4);
-    #raise_event("event_id", srcList='[{"productId":"p_id", "deviceId":"d_id"}]');
-} else {
-    #call_service("productId.devId4.services.service4", duration = 0, p1="param4");
-}'''
-    dict = {}
-    dict["uuid"] = "uuid1"
-    dict["enable"] = True
-    dict["type"] = "timer"
-    dict["priority"] = 88
-    date_list = []
-    date1 = {}
-    date1["startDate"] = "2020-12-01"
-    date1["endDate"] = "2020-12-31"
-    date2 = {}
-    date2["startDate"] = "2020-10-01"
-    date2["endDate"] = "2020-12-31"
-    date_list.append(date1)
-    date_list.append(date2)
-    dict["date"] = date_list
-
-    time_list = []
-    time1 = {}
-    time1["startTime"] = "01:00:00"
-    time1["endTime"] = "03:00:00"
-    time2 = {}
-    time2["startTime"] = "19:00:00"
-    time2["endTime"] = "3:00:00"
-    time_list.append(time1)
-    time_list.append(time2)
-    dict["time"] = time_list
-
-    src_list = ["sd1", "sd2"]
-    dst_list = ["dd1", "dd2"]
-    dict["srcDevice"] = src_list
-    dict["dstDevice"] = dst_list
-    dict["script"] = js
-
-    rules_dict = {'rules':[]}
-    rules_dict['rules'].append(dict)
-    RuleMng.add_rule(**rules_dict)
-    #RuleMng.timer_rule_decision()
-    file = importlib.import_module("rule.py." + dict["uuid"])
-    importlib.reload(file)
-    command_list, event_list = file.script_fun()
-    print("===============")
-    print(command_list)
-    print("===============")
-    print(event_list)

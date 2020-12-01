@@ -36,87 +36,81 @@ class RuleService:
 
     #=============service=========================
     '''添加规则
-    param=
-    {
-        "rules":[
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
-    }
+    rules = [
+        {
+            "uuid":"",
+            "enable": true,
+            "type": "timer",
+            "priority": 55,
+            "date":[
+                {
+                    "startDate":"2020-10-01",
+                    "endDate":"2020-10-08"
+                }
+            ],
+            "time":[
+                {
+                    "startTime":"00:00:00",
+                    "endTime":"18:00:00"
+                }
+            ],
+            "srcDevice":[
+                "s1","s2"
+            ],
+            "dstDevice":[
+                "d1","d2"
+            ],
+            "script":""
+        }
+    ]
     '''
+
     @rpc
-    def add_rule(self, **param)->int:
-        payload = json.dumps(param)
+    def add_rule(self, rules)->int:
+        payload = json.dumps(rules)
         msg = MyLog.color_green('rpc call add_rule: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.add_rule(**param)
+        return RuleMng.add_rule(rules)
 
     '''更新规则
-    param=
-    {
-        "rules":[
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
-    }
+    rules = [
+        {
+            "uuid":"",
+            "enable": true,
+            "type": "timer",
+            "priority": 55,
+            "date":[
+                {
+                    "startDate":"2020-10-01",
+                    "endDate":"2020-10-08"
+                }
+            ],
+            "time":[
+                {
+                    "startTime":"00:00:00",
+                    "endTime":"18:00:00"
+                }
+            ],
+            "srcDevice":[
+                "s1","s2"
+            ],
+            "dstDevice":[
+                "d1","d2"
+            ],
+            "script":""
+        }
+    ]
     '''
     @rpc
-    def update_rule(self, **param)->int:
-        payload = json.dumps(param)
+    def update_rule(self, rules)->int:
+        payload = json.dumps(rules)
         msg = MyLog.color_green('rpc call update_rule: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.update_rule(**param)
+        return RuleMng.update_rule(rules)
 
     '''获取指定uuid的规则
-    入参 payload =
-    {
-        "uuids":[
+    入参 
+        uuids = [
             "uuid1","uuid2"
         ]
     }
@@ -151,11 +145,11 @@ class RuleService:
         ]
     '''
     @rpc
-    def get_rule_by_uuid(self, **param)->(int, list):
-        payload = json.dumps(param)
+    def get_rule_by_uuid(self, uuids)->(int, list):
+        payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call get_rule_by_uuid: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.get_rule_by_uuid(**param)
+        return RuleMng.get_rule_by_uuid(uuids)
 
     '''获取所有uuid的规则
     返回 1. 结果码
@@ -195,19 +189,16 @@ class RuleService:
         return RuleMng.get_all_rules()
 
     '''删除指定uuid的规则
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @rpc
-    def delete_rule_by_uuid(self, **param)->int:
-        payload = json.dumps(param)
+    def delete_rule_by_uuid(self, uuids)->int:
+        payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call delete_rule_by_uuid: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.delete_rule_by_uuid(**param)
+        return RuleMng.delete_rule_by_uuid(uuids)
 
 
     '''清空所有规则'''
@@ -218,108 +209,90 @@ class RuleService:
         return RuleMng.clear_all_rule()
 
     '''设置规则可用
-        param=
-        '{
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }'
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @rpc
-    def enable_rule(self, **param)->int:
-        payload = json.dumps(param)
+    def enable_rule(self, uuids)->int:
+        payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call enable_rule: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.enable_rule(**param)
+        return RuleMng.enable_rule(uuids)
 
     '''设置规则不可用
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @rpc
-    def disable_rule(self, **param)->int:
-        payload = json.dumps(param)
+    def disable_rule(self, uuids)->int:
+        payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call disable_rule: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.disable_rule(**param)
+        return RuleMng.disable_rule(uuids)
 
     '''停止联动规则执行
-        param=
-        {
-            "uuids":[
-                "uuid1","uuid2"
-            ]
-        }
+    uuids = [
+        "uuid1","uuid2"
+    ]
     '''
     @rpc
-    def stop_linkage_rule_running(self, **param)->int:
-        payload = json.dumps(param)
+    def stop_linkage_rule_running(self, uuids)->int:
+        payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call stop_linkage_rule_running: %s'%(payload))
         MyLog.logger.info(msg)
         #删除指令列表中指定uuid的指令
-        return RuleMng.stop_linkage_rule_running(**param)
+        return RuleMng.stop_linkage_rule_running(uuids)
 
     '''外部联动
-    param=
-    {
-        "services":[
-            {
-                "uuid":"",
-                "priority": 55,
-                "script":""
-            }
-        ]
-    }
+    services = [
+        {
+            "uuid":"",
+            "priority": 55,
+            "script":""
+        }
+    ]
     '''
     @rpc
-    def outside_linkage(self, **param)->int:
-        payload = json.dumps(param)
+    def outside_linkage(self, services)->int:
+        payload = json.dumps(services)
         msg = MyLog.color_green('rpc call outside_linkage: %s'%(payload))
         MyLog.logger.info(msg)
         #添加联动指令到指令列表
-        return RuleMng.outside_linkage(**param)
+        return RuleMng.outside_linkage(services)
 
     '''临时手动
-    param=
-    {
-        "services":[
-            {
-                "priority": 55,
-                "script":""
-            }
-        ]
-    }
+    services = [
+        {
+            "priority": 55,
+            "script":""
+        }
+    ]
     '''
     @rpc
-    def manual_control(self, **param)->int:
-        payload = json.dumps(param)
+    def manual_control(self, services)->int:
+        payload = json.dumps(services)
         msg = MyLog.color_green('rpc call manual_control: %s'%(payload))
         MyLog.logger.info(msg)
-        return RuleMng.manual_control(**param)
+        return RuleMng.manual_control(services)
 
     '''
-    param=
-    {
-        "services":[
-            {
-                "productId":"",
-                "devId":"",
-                "service":""
-            }
-        ]
-    }
+    services = [
+        {
+            "productId":"",
+            "devId":"",
+            "service":""
+        }
+    ]
     '''
     @rpc
-    def stop_manual_control(self, **param)->int:
-        payload = json.dumps(param)
+    def stop_manual_control(self, services)->int:
+        payload = json.dumps(services)
         msg = MyLog.color_green('rpc call stop_manual_control: %s'%(payload))
         MyLog.logger.info(msg)
         # 删除指令队列中指定方法类型为manual的指令。
-        return RuleMng.stop_manual_control(**param)
+        return RuleMng.stop_manual_control(services)
 
 
     '''
