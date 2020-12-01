@@ -151,4 +151,4 @@ class DevCall:
         except Exception as e:
             msg = MyLog.color_red("call_service has except: " + str(e))
             MyLog.logger.error(msg)
-            return g_retValue.qjBoxOpcodeExcept.value
+            return g_retValue.qjBoxOpcodeExcept.value, {}

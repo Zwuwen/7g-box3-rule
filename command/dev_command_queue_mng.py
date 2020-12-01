@@ -89,12 +89,14 @@ class DevCommandQueueMng:
         is_all_success = True
         for run_command in need_run_command_list:
             MyLog.logger.info('设备(%s)run command: %s'%(dev_id,run_command.command))
-            if g_retValue.qjBoxOpcodeSucess.value == DevCommandQueueMng.command_exe(dev_id, run_command):
+            ret = DevCommandQueueMng.command_exe(dev_id, run_command)
+            if g_retValue.qjBoxOpcodeSucess.value == ret:
                 # 如果当前最高等级的规则类型不为联动，就要清除该指令队列中存在的类型为联动的指令
                 if run_command.type != 'linkage':
                     dev_command_queue.clear_linkage_command(run_command.command)
-            else:
-                is_all_success = False
+            elif g_retValue.qjBoxOpcodeExcept.value != ret:
+                    #错误不为程序异常才认为错误，程序异常就不需要一直重试了。
+                    is_all_success = False
         #如果所有指令执行成功，那么重置定时器为所有指令中下一次最近的时间，如果有失败，那就定时60秒后重试。
         if is_all_success:
             DevCommandQueueMng.__reset_dev_timer(dev_id)
