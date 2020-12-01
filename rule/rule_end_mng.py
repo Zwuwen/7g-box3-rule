@@ -17,13 +17,13 @@ g_running_rule_endtime_handle_timer = None
 
 
 def running_rule_endtime_handle():
-    MyLog.info("运行中的规则结束处理")
+    MyLog.logger.info("运行中的规则结束处理")
     current_ts = time.time()
     smallest_ts = 0
     uuid_list = []
     for rule in g_running_rule_endtime_list:
         if rule['end_ts'] < current_ts:
-            MyLog.info("规则(%s)结束"%(rule['uuid']))
+            MyLog.logger.info("规则(%s)结束"%(rule['uuid']))
             g_running_rule_endtime_list.remove(rule)
             uuid_list.append(rule['uuid'])
             # 上报规则结束事件

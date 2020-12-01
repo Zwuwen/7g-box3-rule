@@ -28,7 +28,7 @@ class DevCommandQueueMng:
     '''
     @staticmethod
     def command_exe(dev_id, command:CommandInfo)->int:
-        MyLog.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
+        MyLog.logger.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
         try:
             #先获取指令名称
             command_name = command.command
@@ -39,7 +39,7 @@ class DevCommandQueueMng:
             need_report_rule_command_cover_event = False
             if running_command:
                 #判断是否为同一个规则指令，如果不是才允许执行
-                MyLog.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
+                MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
                 if running_command.uuid != command.uuid:
                     need_exe = True
                     if not running_command.default_param:
@@ -51,15 +51,19 @@ class DevCommandQueueMng:
             if need_exe:
                 if command.default_param:
                     #执行默认参数
-                    MyLog.key('下发默认参数指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.command, dev_id, command.priority))
+                    msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.command, dev_id, command.priority))
+                    MyLog.logger.info(msg)
                     result, data = DevCall.call_service(dev_id, command.command)
-                    MyLog.key('下发默认参数指令(%s)给设备(%s)服务, 返回:%d'%(command.command, dev_id, result))
+                    msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 返回:%d'%(command.command, dev_id, result))
+                    MyLog.logger.info(msg)
                     EventReport.report_default_command_status_event(dev_id, command.command, result)
                 else:
                     #执行规则配置参数
-                    MyLog.key('下发规则(%s)指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.uuid, command.command, dev_id, command.priority))
+                    msg = MyLog.color_green('下发规则(%s)指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.uuid, command.command, dev_id, command.priority))
+                    MyLog.logger.info(msg)
                     result, data = DevCall.call_service(dev_id, command.command, command.params)
-                    MyLog.key('下发规则(%s)指令(%s)给设备(%s)服务, 返回:%d'%(command.uuid, command.command, dev_id, result))
+                    msg = MyLog.color_green('下发规则(%s)指令(%s)给设备(%s)服务, 返回:%d'%(command.uuid, command.command, dev_id, result))
+                    MyLog.logger.info(msg)
                     #上报ruleCommandStatus event
                     EventReport.report_rule_command_status_event(command.uuid, dev_id, command.command, result)
 
@@ -71,19 +75,20 @@ class DevCommandQueueMng:
 
             return result
         except Exception as e:
-            MyLog.error('command_exe has except: ' + str(e))
+            msg = MyLog.color_red('command_exe has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''针对一个设备做一次指令决策执行'''
     @staticmethod
     def dev_exe(dev_id)->None:
-        MyLog.info('设备(%s)所有指令执行决策'%(dev_id))
+        MyLog.logger.info('设备(%s)所有指令执行决策'%(dev_id))
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         need_run_command_list = dev_command_queue.get_highest_priority_command_list()
-        MyLog.info('设备(%s) need_run_command_list size:%d'%(dev_id, len(need_run_command_list)))
+        MyLog.logger.info('设备(%s) need_run_command_list size:%d'%(dev_id, len(need_run_command_list)))
         is_all_success = True
         for run_command in need_run_command_list:
-            MyLog.info('设备(%s)run command: %s'%(dev_id,run_command.command))
+            MyLog.logger.info('设备(%s)run command: %s'%(dev_id,run_command.command))
             if g_retValue.qjBoxOpcodeSucess.value == DevCommandQueueMng.command_exe(dev_id, run_command):
                 # 如果当前最高等级的规则类型不为联动，就要清除该指令队列中存在的类型为联动的指令
                 if run_command.type != 'linkage':
@@ -102,11 +107,11 @@ class DevCommandQueueMng:
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         nearest_ts = dev_command_queue.get_nearest_ts()
         ts = time.time()
-        MyLog.info('指令执行 nearest_ts: %f, ts: %f'%(nearest_ts, ts))
+        MyLog.logger.info('指令执行 nearest_ts: %f, ts: %f'%(nearest_ts, ts))
         if nearest_ts > ts:
             #重置定时器时间
             t = nearest_ts - ts
-            MyLog.info('重置设备(%s)的指令执行定时器，倒计时: %f'%(dev_id, t))
+            MyLog.logger.info('重置设备(%s)的指令执行定时器，倒计时: %f'%(dev_id, t))
             timer = Timer(t, DevCommandQueueMng.dev_exe, args=(dev_id,))
             timer.start()
             DevCommandQueueMng.update_dev_timer(dev_id, timer)
@@ -114,7 +119,7 @@ class DevCommandQueueMng:
     '''重置设备的指令执行定时器'''
     @staticmethod
     def __reset_dev_timer_by_time(dev_id, t)->None:
-        MyLog.info('重置设备(%s)的指令执行定时器，指定倒计时: %f'%(dev_id, t))
+        MyLog.logger.info('重置设备(%s)的指令执行定时器，指定倒计时: %f'%(dev_id, t))
         timer = Timer(t, DevCommandQueueMng.dev_exe, args=(dev_id,))
         timer.start()
         DevCommandQueueMng.update_dev_timer(dev_id, timer)
@@ -135,7 +140,7 @@ class DevCommandQueueMng:
     '''添加定时规则指令列表'''
     @staticmethod
     def add_timer_command(product_id, dev_id, command_list)->None:
-        MyLog.info('添加定时指令 产品ID:%s, 设备ID:%s'%(product_id, dev_id))
+        MyLog.logger.info('添加定时指令 产品ID:%s, 设备ID:%s'%(product_id, dev_id))
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         if not dev_command_queue:
             dict = {}
@@ -177,7 +182,7 @@ class DevCommandQueueMng:
             need_exe = True
             for highest_priority_command in highest_priority_command_list:
                 if command.command == highest_priority_command.command:
-                    MyLog.info('command.command = %s, command.priority = %d, highest_priority_command.priority = %d'%(command.command, command.priority, highest_priority_command.priority))
+                    MyLog.logger.info('command.command = %s, command.priority = %d, highest_priority_command.priority = %d'%(command.command, command.priority, highest_priority_command.priority))
                     if command.priority <= highest_priority_command.priority:
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
                         need_exe = False
@@ -189,7 +194,7 @@ class DevCommandQueueMng:
                     need_add_to_command_queue_list.append(command)
 
         if need_add_to_command_queue_list:
-            MyLog.info('dev_command_queue.add_linkage_command_list size: %d'%(len(need_add_to_command_queue_list)))
+            MyLog.logger.info('dev_command_queue.add_linkage_command_list size: %d'%(len(need_add_to_command_queue_list)))
             dev_command_queue.add_linkage_command_list(need_add_to_command_queue_list)
             name_list = dev_command_queue.get_all_command_name_list()
             DevCommandQueueMng.__reset_dev_timer(dev_id)

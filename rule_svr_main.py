@@ -13,7 +13,8 @@ from log.log import MyLog
 MyLog.init(is_enable_std=False, log_period = 7, level = RULE_LOG_LEVEL, path = RULE_LOG_PATH)
 
 def main():
-    MyLog.key('+++++++++规则引擎启动+++++++++')
+    msg = MyLog.color_green('+++++++++规则引擎启动+++++++++')
+    MyLog.logger.info(msg)
     RuleNameko.open()
     RuleMng.timer_rule_decision()
     while True:

@@ -70,7 +70,8 @@ class RuleService:
     @rpc
     def add_rule(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call add_rule: %s'%(payload))
+        msg = MyLog.color_green('rpc call add_rule: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.add_rule(**param)
 
     '''更新规则
@@ -108,7 +109,8 @@ class RuleService:
     @rpc
     def update_rule(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call update_rule: %s'%(payload))
+        msg = MyLog.color_green('rpc call update_rule: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.update_rule(**param)
 
     '''获取指定uuid的规则
@@ -151,7 +153,8 @@ class RuleService:
     @rpc
     def get_rule_by_uuid(self, **param)->(int, list):
         payload = json.dumps(param)
-        MyLog.key('rpc call get_rule_by_uuid: %s'%(payload))
+        msg = MyLog.color_green('rpc call get_rule_by_uuid: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.get_rule_by_uuid(**param)
 
     '''获取所有uuid的规则
@@ -187,7 +190,8 @@ class RuleService:
     '''
     @rpc
     def get_all_rules(self)->(int, list):
-        MyLog.key('rpc call get_all_rules')
+        msg = MyLog.color_green('rpc call get_all_rules')
+        MyLog.logger.info(msg)
         return RuleMng.get_all_rules()
 
     '''删除指定uuid的规则
@@ -201,14 +205,16 @@ class RuleService:
     @rpc
     def delete_rule_by_uuid(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call delete_rule_by_uuid: %s'%(payload))
+        msg = MyLog.color_green('rpc call delete_rule_by_uuid: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.delete_rule_by_uuid(**param)
 
 
     '''清空所有规则'''
     @rpc
     def clear_all_rule(self)->int:
-        MyLog.key('rpc call clear_all_rule')
+        msg = MyLog.color_green('rpc call clear_all_rule')
+        MyLog.logger.info(msg)
         return RuleMng.clear_all_rule()
 
     '''设置规则可用
@@ -222,7 +228,8 @@ class RuleService:
     @rpc
     def enable_rule(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call enable_rule: %s'%(payload))
+        msg = MyLog.color_green('rpc call enable_rule: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.enable_rule(**param)
 
     '''设置规则不可用
@@ -236,7 +243,8 @@ class RuleService:
     @rpc
     def disable_rule(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call disable_rule: %s'%(payload))
+        msg = MyLog.color_green('rpc call disable_rule: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.disable_rule(**param)
 
     '''停止联动规则执行
@@ -250,7 +258,8 @@ class RuleService:
     @rpc
     def stop_linkage_rule_running(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call stop_linkage_rule_running: %s'%(payload))
+        msg = MyLog.color_green('rpc call stop_linkage_rule_running: %s'%(payload))
+        MyLog.logger.info(msg)
         #删除指令列表中指定uuid的指令
         return RuleMng.stop_linkage_rule_running(**param)
 
@@ -269,7 +278,8 @@ class RuleService:
     @rpc
     def outside_linkage(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call outside_linkage: %s'%(payload))
+        msg = MyLog.color_green('rpc call outside_linkage: %s'%(payload))
+        MyLog.logger.info(msg)
         #添加联动指令到指令列表
         return RuleMng.outside_linkage(**param)
 
@@ -287,7 +297,8 @@ class RuleService:
     @rpc
     def manual_control(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call manual_control: %s'%(payload))
+        msg = MyLog.color_green('rpc call manual_control: %s'%(payload))
+        MyLog.logger.info(msg)
         return RuleMng.manual_control(**param)
 
     '''
@@ -305,7 +316,8 @@ class RuleService:
     @rpc
     def stop_manual_control(self, **param)->int:
         payload = json.dumps(param)
-        MyLog.key('rpc call stop_manual_control: %s'%(payload))
+        msg = MyLog.color_green('rpc call stop_manual_control: %s'%(payload))
+        MyLog.logger.info(msg)
         # 删除指令队列中指定方法类型为manual的指令。
         return RuleMng.stop_manual_control(**param)
 
@@ -319,7 +331,8 @@ class RuleService:
     '''
     @rpc
     def event_notice(self, product_id, dev_id, event, payload)->None:
-        MyLog.key('rpc call event_notice, dev_id:%s, event:%s, payload:%s'%(dev_id, event, payload))
+        msg = MyLog.color_green('rpc call event_notice, dev_id:%s, event:%s, payload:%s'%(dev_id, event, payload))
+        MyLog.logger.info(msg)
         if EventHandle.update_event(product_id, dev_id, event, payload):
             #根据dev_id，触发与其相关的联动脚本执行
             timer = Timer(0, RuleMng.run_linkage_rule_by_devid, [dev_id])
@@ -330,6 +343,7 @@ class RuleService:
     '''
     @rpc
     def attribute_notice(self, product_id, dev_id)->None:
-        MyLog.key('rpc call attribute_notice, dev_id:%s'%(dev_id))
+        msg = MyLog.color_green('rpc call attribute_notice, dev_id:%s'%(dev_id))
+        MyLog.logger.debug(msg)
         timer = Timer(0, RuleMng.run_linkage_rule_by_devid, [dev_id])
         timer.start()

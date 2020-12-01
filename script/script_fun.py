@@ -17,7 +17,7 @@ productId.devId.events.traffic.type
 productId.devId.properties.bri
 '''
 def get_value(payload):
-    MyLog.info('script_fun get_value')
+    MyLog.logger.info('script_fun get_value')
     try:
         key_list = payload.split(".")
         if key_list[2] == 'properties':
@@ -29,26 +29,29 @@ def get_value(payload):
         else:
             return None
     except Exception as e:
-        MyLog.error('get_value has except: ' + str(e))
+        msg = MyLog.color_red('get_value has except: ' + str(e))
+        MyLog.logger.error(msg)
         return None
 
 '''productId.devId.events.traffic'''
 def get_event_time_from_now(payload):
     try:
-        MyLog.info("get_event_time_from_now payload: %s"%(payload))
+        MyLog.logger.info("get_event_time_from_now payload: %s"%(payload))
         key_list = payload.split(".")
         if key_list[2] != 'events':
-            MyLog.error("payload error")
+            msg = MyLog.color_red("payload error")
+            MyLog.logger.error(msg)
             return 2592000
         ts = EventHandle.get_event_timestamp(key_list[0], key_list[1], key_list[3])
         if ts is None:
             return 2592000
         current_ts = time.time()
         t = current_ts - ts
-        MyLog.info('get_event_time_from_now: %f'%(t))
+        MyLog.logger.info('get_event_time_from_now: %f'%(t))
         return t
     except Exception as e:
-        MyLog.error('get_event_time_from_now has except: ' + str(e))
+        msg = MyLog.color_red('get_event_time_from_now has except: ' + str(e))
+        MyLog.logger.error(msg)
         return 2592000
 
 def get_command_list_by_dev_id(dev_command_list, dev_id):
@@ -86,7 +89,8 @@ def call_service(dev_command_list, service, duration, **param)->None:
             dev_command['command_list'] = command_list
             dev_command_list.append(dev_command)
     except Exception as e:
-        MyLog.error('call_service has except: ' + str(e))
+        msg = MyLog.color_red('call_service has except: ' + str(e))
+        MyLog.logger.error(msg)
 
 
 '''
@@ -100,7 +104,8 @@ def raise_event(event_list, event_id, srcList):
         event_dict['src_dev_list'] = src_dev_list_dict
         event_list.append(event_dict)
     except Exception as e:
-        MyLog.error('raise_event has except: ' + str(e))
+        msg = MyLog.color_red('raise_event has except: ' + str(e))
+        MyLog.logger.error(msg)
 
 def get_attribute_value(key_list):
     try:
@@ -119,5 +124,6 @@ def get_attribute_value(key_list):
         else:
             return None
     except Exception as e:
-        MyLog.error('get_attribute_value has except: ' + str(e))
+        msg = MyLog.color_red('get_attribute_value has except: ' + str(e))
+        MyLog.logger.error(msg)
         return None

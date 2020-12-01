@@ -29,7 +29,7 @@ class DevCommandQueue:
 
     #添加定时规则指令列表
     def add_timer_command_list(self, command_list)->None:
-        MyLog.info('添加定时指令列表到队列，列表长度: %d'%(len(command_list)))
+        MyLog.logger.info('添加定时指令列表到队列，列表长度: %d'%(len(command_list)))
         for command in command_list:
             command.type = 'timer'
             is_new_command = True
@@ -153,18 +153,19 @@ class DevCommandQueue:
         for queue in self.__queues:
             command = self.get_highest_priority_command_by_command_name(queue['command_name'])
             if command:
-                MyLog.info('获取设备(%s)指令队列中最高优先级的指令(%s), 规则uuid为: %s, 优先级为:%d'\
+                MyLog.logger.info('获取设备(%s)指令队列中最高优先级的指令(%s), 规则uuid为: %s, 优先级为:%d'\
                 %(self.__dev_id, queue['command_name'], command.uuid, command.priority))
                 command_list.append(command)
             else:
-                MyLog.error("command is None")
+                msg = MyLog.color_red("command is None")
+                MyLog.logger.error(msg)
         return command_list
 
     ''' 根据指令获取当前时间点可以执行的优先级最高的指令
         如果该指令队列存在，但队列为空，则返回默认指令 '''
     def get_highest_priority_command_by_command_name(self, command_name)->CommandInfo:
         ts = time.time()
-        MyLog.info("get_highest_priority_command_by_command_name: %s"%(command_name))
+        MyLog.logger.info("get_highest_priority_command_by_command_name: %s"%(command_name))
         for queue in self.__queues:
             highest_command:CommandInfo = None
             if 'command_name' in queue and queue['command_name'] == command_name:

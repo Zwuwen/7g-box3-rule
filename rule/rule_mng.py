@@ -30,7 +30,7 @@ class RuleMng:
     @classmethod
     def timer_rule_decision(cls)->None:
         try:
-            MyLog.info('进行定时规则决策')
+            MyLog.logger.info('进行定时规则决策')
             #获取符合要求的uuid列表
             uuid_list = SqliteInterface.get_current_timer_rule()
             #计算出下一次最近的执行时间戳,启动定时器
@@ -38,11 +38,11 @@ class RuleMng:
             if next_decision_time > 0:
                 RuleMng.start_new_rule_decision_timer(next_decision_time)
             #执行规则，将规则指令下发给指令管理器
-            MyLog.info('uuid_list size: ' + str(len(uuid_list)))
+            MyLog.logger.info('uuid_list size: ' + str(len(uuid_list)))
             dev_id_list = []
             rule_endtime_list = []
             for uuid in uuid_list:
-                MyLog.info('===开始执行规则(%s)==='%(uuid))
+                MyLog.logger.info('===开始执行规则(%s)==='%(uuid))
                 priority = SqliteInterface.get_priority_by_uuid(uuid)
                 if priority < 0:
                     continue
@@ -50,7 +50,7 @@ class RuleMng:
                 EventReport.report_rule_start_event(uuid)
                 #记录规则结束时间戳到全局变量g_running_rule，等待结束上报结束事件
                 start_ts, end_ts = cls.get_rule_timestamp(uuid)
-                MyLog.info('规则(%s)结束时间戳:%d'%(uuid, end_ts))
+                MyLog.logger.info('规则(%s)结束时间戳:%d'%(uuid, end_ts))
                 if end_ts > 0:
                     rule_endtime_list.append({'uuid': uuid, "end_ts": end_ts})
                 #执行脚本
@@ -71,12 +71,13 @@ class RuleMng:
 
                 for custom_event in event_list:
                     EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
-                MyLog.info('===结束执行规则(%s)==='%(uuid))
+                MyLog.logger.info('===结束执行规则(%s)==='%(uuid))
 
             DevCommandQueueMng.dev_list_exe(dev_id_list)
             add_running_rule_endtime(rule_endtime_list)
         except Exception as e:
-            MyLog.error('timer_rule_decision has except: ' + str(e))
+            msg = MyLog.color_red("timer_rule_decision has except: " + str(e))
+            MyLog.logger.error(msg)
 
     '''获取指定规则的开始时间戳和结束时间戳'''
     @classmethod
@@ -163,22 +164,26 @@ class RuleMng:
              'dstDevice', 'script'}
             if 'rules' not in param:
                 #返回参数错误
-                MyLog.error('key param not exist')
+                msg = MyLog.color_red('key param not exist')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
 
             for rule_dict in param['rules']:
                 if SqliteInterface.rule_exist(rule_dict['uuid']):
-                    MyLog.error("rule(%s) has exist"%(rule_dict['uuid']))
+                    msg = MyLog.color_red("rule(%s) has exist"%(rule_dict['uuid']))
+                    MyLog.logger.error(msg)
                     continue
 
                 if not cls.__check_keys_exists(rule_dict, keys):
                     #返回参数错误
-                    MyLog.error('key param not exist')
+                    msg = MyLog.color_red('key param not exist')
+                    MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
                 if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
                     #返回参数错误
-                    MyLog.error("param error, srcDevice not exist")
+                    msg = MyLog.color_red("param error, srcDevice not exist")
+                    MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
                 if not os.path.exists(RULE_JS_SCRIPT_FOLDER):
@@ -188,8 +193,8 @@ class RuleMng:
                 #将平台下发的规则脚本转换成py脚本，并将两个脚本内容都保存到文件，以uuid为文件名。
                 js_path = RULE_JS_SCRIPT_FOLDER + "/" + rule_dict['uuid'] + '.js'
                 py_path = RULE_PY_SCRIPT_FOLDER + "/" + rule_dict['uuid'] + '.py'
-                MyLog.info("js_path:%s"%(js_path))
-                MyLog.info("py_path:%s"%(py_path))
+                MyLog.logger.info("js_path:%s"%(js_path))
+                MyLog.logger.info("py_path:%s"%(py_path))
                 write_file(rule_dict['script'], js_path)
                 conver_to_py(rule_dict['script'], py_path)
 
@@ -201,7 +206,8 @@ class RuleMng:
             RuleMng.start_new_rule_decision_timer(0)
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('add_rule has except: ' + str(e))
+            msg = MyLog.color_red('add_rule has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''获取指定uuid的规则
@@ -247,7 +253,8 @@ class RuleMng:
             keys = {'uuids'}
             if not cls.__check_keys_exists(param, keys):
                 #返回参数错误
-                MyLog.error('get_rule_by_uuid param error')
+                msg = MyLog.color_red('get_rule_by_uuid param error')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value, None
             rule_list = []
             for uuid in param['uuids']:
@@ -348,7 +355,8 @@ class RuleMng:
             keys = {'uuids'}
             if not cls.__check_keys_exists(param, keys):
                 #返回参数错误
-                MyLog.error('必要参数不存在')
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
             #数据库删除规则
             SqliteInterface.delete_rule(param['uuids'])
@@ -366,7 +374,8 @@ class RuleMng:
             #规则决策
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('delete_rule_by_uuid has except: ' + str(e))
+            msg = MyLog.color_red('delete_rule_by_uuid has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''添加规则
@@ -408,18 +417,21 @@ class RuleMng:
              'dstDevice', 'script'}
             if 'rules' not in param:
                 #返回参数错误
-                MyLog.error('必要参数不存在')
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
             uuid_list = []
             for rule_dict in param['rules']:
                 if not cls.__check_keys_exists(rule_dict, keys):
                     #返回参数错误
-                    MyLog.error('必要参数不存在')
+                    msg = MyLog.color_red('必要参数不存在')
+                    MyLog.logger.error(msg)
                     continue
 
                 if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
                     #返回参数错误
-                    MyLog.error('必要参数不存在')
+                    msg = MyLog.color_red('必要参数不存在')
+                    MyLog.logger.error(msg)
                     continue
 
                 uuid_list.append(rule_dict['uuid'])
@@ -442,7 +454,8 @@ class RuleMng:
             ret = RuleMng.add_rule(param)
             return ret
         except Exception as e:
-            MyLog.error('update_rule has except: ' + str(e))
+            msg = MyLog.color_red('update_rule has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''清空所有规则'''
@@ -462,7 +475,8 @@ class RuleMng:
             DevCommandQueueMng.clear_all_command()
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('clear_all_rule has except: ' + str(e))
+            msg = MyLog.color_red('clear_all_rule has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''设置规则可用
@@ -486,7 +500,8 @@ class RuleMng:
             RuleMng.start_new_rule_decision_timer(0)
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('enable_rule has except: ' + str(e))
+            msg = MyLog.color_red('enable_rule has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''设置规则不可用
@@ -503,6 +518,8 @@ class RuleMng:
             keys = {'uuids'}
             if not cls.__check_keys_exists(param, keys):
                 #返回参数错误
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
             #数据库删除规则
             SqliteInterface.set_rule_disable(param['uuids'])
@@ -515,27 +532,29 @@ class RuleMng:
             RuleMng.start_new_rule_decision_timer(0)
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('disable_rule has except: ' + str(e))
+            msg = MyLog.color_red('disable_rule has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     @classmethod
     def run_linkage_rule_by_devid(cls, dev_id)->None:
-        MyLog.info('##########run_linkage_rule_by_devid############')
+        MyLog.logger.info('##########run_linkage_rule_by_devid############')
         uuid_list = SqliteInterface.get_current_linkage_rule_by_src_devid(dev_id)
         for uuid in uuid_list:
             py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
             if not os.path.exists(py_path):
-                MyLog.error("run_linkage_rule_by_devid: py(%s) is not exist"%(py_path))
+                msg = MyLog.color_red("run_linkage_rule_by_devid: py(%s) is not exist"%(py_path))
+                MyLog.logger.error(msg)
                 continue
             #执行脚本
             py_import_path = RULE_PY_MODEL_PATH + uuid
-            MyLog.debug('py_import_path: ' + py_import_path)
+            MyLog.logger.debug('py_import_path: ' + py_import_path)
             file = importlib.import_module(py_import_path)
             importlib.reload(file)
-            MyLog.debug('run script fun')
+            MyLog.logger.debug('run script fun')
             #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
             dev_command_list, event_list = file.script_fun()
-            MyLog.debug('dev_command_list size: ' + str(len(dev_command_list)))
+            MyLog.logger.debug('dev_command_list size: ' + str(len(dev_command_list)))
             if dev_command_list or event_list:
                 priority = SqliteInterface.get_priority_by_uuid(uuid)
                 if priority < 0:
@@ -576,7 +595,8 @@ class RuleMng:
 
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('stop_linkage_rule_running has except: ' + str(e))
+            msg = MyLog.color_red('stop_linkage_rule_running has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''外部联动
@@ -597,26 +617,29 @@ class RuleMng:
             keys = {'uuid', 'priority', 'script'}
             if 'services' not in param:
                 #返回参数错误
-                MyLog.error('必要参数不存在')
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
             for service_dict in param['services']:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
-                    MyLog.error('必要参数不存在')
+                    msg = MyLog.color_red('必要参数不存在')
+                    MyLog.logger.error(msg)
                     continue
                 uuid = service_dict['uuid']
                 py_path = "/tmp/" + uuid + '.py'
                 pyc_path = "/tmp/" + uuid + '.pyc'
                 conver_to_py(service_dict['script'], py_path)
                 if not os.path.exists(py_path):
-                    MyLog.error("run_linkage_rule_by_devid: py(%s) is not exist"%(py_path))
+                    msg = MyLog.color_red("outside_linkage: py(%s) is not exist"%(py_path))
+                    MyLog.logger.error(msg)
                     continue
                 #执行脚本
                 file = importlib.import_module(uuid)
                 importlib.reload(file)
                 #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
                 dev_command_list, event_list = file.script_fun()
-                MyLog.debug('dev_command_list size: %d'%(len(dev_command_list)))
+                MyLog.logger.debug('dev_command_list size: %d'%(len(dev_command_list)))
                 if dev_command_list or event_list:
                     current_ts = time.time()
                     # 上报规则开始执行
@@ -628,10 +651,10 @@ class RuleMng:
                             if continue_time < command['time']:
                                 continue_time = command['time']
                             command_info = CommandInfo(uuid, command['service'], command['param'], current_ts, current_ts + command['time'], service_dict['priority'], 'linkage')
-                            MyLog.debug("append command priority = %d"%(service_dict['priority']))
+                            MyLog.logger.debug("append command priority = %d"%(service_dict['priority']))
                             command_info_list.append(command_info)
                         if command_info_list:
-                            MyLog.debug('#add_linkage_command')
+                            MyLog.logger.debug('#add_linkage_command')
                             DevCommandQueueMng.add_linkage_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
 
                     end_ts = current_ts + continue_time
@@ -646,7 +669,8 @@ class RuleMng:
                     os.remove(pyc_path)
                 return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('outside_linkage in rule_mng has except: ' + str(e))
+            msg = MyLog.color_red('outside_linkage in rule_mng has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
 
@@ -669,13 +693,15 @@ class RuleMng:
             keys = {'priority', 'script'}
             if 'services' not in param:
                 #返回参数错误
-                MyLog.error('必要参数不存在')
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
 
             for service_dict in param['services']:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
-                    MyLog.error('必要参数不存在')
+                    msg = MyLog.color_red('必要参数不存在')
+                    MyLog.logger.error(msg)
                     continue
 
                 current_ts = time.time()
@@ -704,7 +730,8 @@ class RuleMng:
                     os.remove(pyc_path)
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('manual_control in rule_mng has except: ' + str(e))
+            msg = MyLog.color_red('manual_control in rule_mng has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     '''
@@ -725,21 +752,24 @@ class RuleMng:
             keys = {'productId', 'devId', 'service'}
             if 'services' not in param:
                 #返回参数错误
-                MyLog.error('必要参数不存在')
+                msg = MyLog.color_red('必要参数不存在')
+                MyLog.logger.error(msg)
                 return g_retValue.qjBoxOpcodeInputParamErr.value
 
             dev_id_list = []
             for service_dict in param['services']:
                 if not cls.__check_keys_exists(service_dict, keys):
                     #返回参数错误
-                    MyLog.error('必要参数不存在')
+                    msg = MyLog.color_red('必要参数不存在')
+                    MyLog.logger.error(msg)
                     continue
                 DevCommandQueueMng.clear_manual_command(service_dict['productId'], service_dict['devId'], service_dict['service'])
                 dev_id_list.append(service_dict['devId'])
             DevCommandQueueMng.dev_list_exe(dev_id_list)
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
-            MyLog.error('stop_manual_control in rule_mng has except: ' + str(e))
+            msg = MyLog.color_red('stop_manual_control in rule_mng has except: ' + str(e))
+            MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeExcept.value
 
     #校验keys中的可以是否都在字典的key值中存在，支持用.来表示层级关系，比如'a.b'表示{"a":{"b":1}}
@@ -782,7 +812,7 @@ class RuleMng:
 
         if closest_time == None:
             #下一天最早的时间
-            MyLog.debug("time is in next day")
+            MyLog.logger.debug("time is in next day")
             next_day = datetime.now() + timedelta(days=1)
             closest_datetime = datetime(next_day.year, next_day.month, next_day.day, smallest_time.hour, smallest_time.minute, smallest_time.second)
         else:
@@ -796,7 +826,7 @@ class RuleMng:
     #启动新的规则决策执行的定时器
     @classmethod
     def start_new_rule_decision_timer(cls, ts):
-        MyLog.info('启动一个新的规则决策定时器，倒计时: ' + str(ts) + ' 秒')
+        MyLog.logger.info('启动一个新的规则决策定时器，倒计时: ' + str(ts) + ' 秒')
         global g_rule_timer
         if g_rule_timer:
             g_rule_timer.cancel()

@@ -21,7 +21,8 @@ class EventHandle:
             r = RedisHandle()
             return r.hmset_value(key, mapping)
         except Exception as e:
-            MyLog.error('update_event has except: ' + str(e))
+            msg = MyLog.color_red("update_event has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     @classmethod
@@ -32,10 +33,11 @@ class EventHandle:
             ts_byte_list = r.hmget_value(key, 'ts')
             str_ts = ''.join([k.decode('utf-8') for k in ts_byte_list])
             float_ts = float(str_ts)
-            MyLog.info('get_event_timestamp key(%s) ts float_ts: %f'%(key, float_ts))
+            MyLog.logger.info('get_event_timestamp key(%s) ts float_ts: %f'%(key, float_ts))
             return float_ts
         except Exception as e:
-            MyLog.error('get_event_timestamp has except: ' + str(e))
+            msg = MyLog.color_red("get_event_timestamp has except: " + str(e))
+            MyLog.logger.error(msg)
             return None
 
     @classmethod
@@ -50,7 +52,8 @@ class EventHandle:
             else:
                 return None
         except Exception as e:
-            MyLog.error('get_event_payload has except: ' + str(e))
+            msg = MyLog.color_red("get_event_payload has except: " + str(e))
+            MyLog.logger.error(msg)
             return None
 
     '''
@@ -58,7 +61,7 @@ class EventHandle:
     '''
     @classmethod
     def get_event_value(cls, product_id, dev_id, event, key_list):
-        MyLog.info('get_event_value product_id:%s, dev_id:%s, event:%s'%(product_id, dev_id, event))
+        MyLog.logger.info('get_event_value product_id:%s, dev_id:%s, event:%s'%(product_id, dev_id, event))
         try:
             event_payload = cls.get_event_payload(product_id, dev_id, event)
             if event_payload:
@@ -73,7 +76,8 @@ class EventHandle:
                 return event_payload_dict
             return None
         except Exception as e:
-            MyLog.error('get_event_value has except: ' + str(e))
+            msg = MyLog.color_red("get_event_value has except: " + str(e))
+            MyLog.logger.error(msg)
             return None
 
     '''
@@ -89,7 +93,8 @@ class EventHandle:
             else:
                 return None, None
         except Exception as e:
-            MyLog.error('get_array_name_and_index has except: ' + str(e))
+            msg = MyLog.color_red("get_array_name_and_index has except: " + str(e))
+            MyLog.logger.error(msg)
             return None, None
 
 if __name__ == "__main__":

@@ -34,12 +34,14 @@ class SqliteMng:
         try:
             if (type != 'timer' and type != 'linkage') or (priority < 0 or priority > 99):
                 #参数错误
-                MyLog.error('添加规则参数错误')
+                msg = MyLog.color_red('添加规则参数错误')
+                MyLog.logger.error(msg)
                 return False
             ret = self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).all()
             if (ret):
                 #资源已存在
-                MyLog.error('规则uuid已存在')
+                msg = MyLog.color_red('规则uuid已存在')
+                MyLog.logger.error(msg)
                 return False
             element = rule_main_tbl(uuid=uuid, enable=enable, type=type, priority=priority, script_path=script_path, py_path=py_path)
             self.__session.add(element)
@@ -69,7 +71,8 @@ class SqliteMng:
             self.__session.commit()
             return True
         except Exception as e:
-            MyLog.error("add_rule has except: " + str(e))
+            msg = MyLog.color_red("add_rule has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     def rule_exist(self, uuid):
@@ -80,7 +83,8 @@ class SqliteMng:
             else:
                 return False
         except Exception as e:
-            MyLog.error("rule_exist has except: " + str(e))
+            msg = MyLog.color_red("rule_exist has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     def get_rule(self, uuid):
@@ -129,7 +133,8 @@ class SqliteMng:
             return True, {'enable':enable, 'type':type, 'priority':priority, 'date_list':date_list, \
                 'time_list':time_list, 'src_dev_list':src_dev_list, 'dst_dev_list':dst_dev_list, 'script_path':script_path}
         except Exception as e:
-            MyLog.error("get_rule has except: " + str(e))
+            msg = MyLog.color_red("get_rule has except: " + str(e))
+            MyLog.logger.error(msg)
             return False, None
 
     def get_all_uuids(self):
@@ -140,7 +145,8 @@ class SqliteMng:
                 uuid_list.append(info.uuid)
             return True, uuid_list
         except Exception as e:
-            MyLog.error("get_all_uuids has except: " + str(e))
+            msg = MyLog.color_red("get_all_uuids has except: " + str(e))
+            MyLog.logger.error(msg)
             return False, None
 
     def delete_rule(self, uuid_dict):
@@ -154,7 +160,8 @@ class SqliteMng:
             self.__session.commit()
             return True
         except Exception as e:
-            MyLog.error("delete_rule has except: " + str(e))
+            msg = MyLog.color_red("delete_rule has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     def clear_all_rule(self):
@@ -167,7 +174,8 @@ class SqliteMng:
             self.__session.commit()
             return True
         except Exception as e:
-            MyLog.error("clear_all_rule has except: " + str(e))
+            msg = MyLog.color_red("clear_all_rule has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     def set_rule_enable(self, uuid_dict):
@@ -177,7 +185,8 @@ class SqliteMng:
             self.__session.commit()
             return True
         except Exception as e:
-            MyLog.error("set_rule_enable has except: " + str(e))
+            msg = MyLog.color_red("set_rule_enable has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     def set_rule_disable(self, uuid_dict):
@@ -187,7 +196,8 @@ class SqliteMng:
             self.__session.commit()
             return True
         except Exception as e:
-            MyLog.error("set_rule_disable has except: " + str(e))
+            msg = MyLog.color_red("set_rule_disable has except: " + str(e))
+            MyLog.logger.error(msg)
             return False
 
     #获取指定规则的优先级，成功返回优先级，失败返回-1
@@ -198,7 +208,8 @@ class SqliteMng:
                 return info.priority
             return -1
         except Exception as e:
-            MyLog.error("get_priority_by_uuid has except: " + str(e))
+            msg = MyLog.color_red("get_priority_by_uuid has except: " + str(e))
+            MyLog.logger.error(msg)
             return -1
 
     #筛选出当前时间点可以执行的定时规则，筛选条件：规则enable并且当前的日期时间在规则时间内
@@ -209,8 +220,8 @@ class SqliteMng:
             current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")
             str_date = '当前日期: ' + str(current_date)
             str_time = '当前时间: ' + str(current_time)
-            MyLog.info(str_date)
-            MyLog.info(str_time)
+            MyLog.logger.info(str_date)
+            MyLog.logger.info(str_time)
             rule_filter = {
                 and_(
                     and_(
@@ -239,12 +250,13 @@ class SqliteMng:
             .join(rule_time_tbl, rule_time_tbl.uuid==rule_main_tbl.uuid)\
             .filter(*rule_filter).all()
             for info in main_sql:
-                MyLog.info('查找到当前时间点可用的规则，规则uuid为: ' + info.uuid)
+                MyLog.logger.info('查找到当前时间点可用的规则，规则uuid为: ' + info.uuid)
                 uuid_list.append(info.uuid)
 
             return uuid_list
         except Exception as e:
-            MyLog.error("get_current_timer_rule has except: " + str(e))
+            msg = MyLog.color_red("get_current_timer_rule has except: " + str(e))
+            MyLog.logger.error(msg)
             return []
 
 
@@ -263,7 +275,8 @@ class SqliteMng:
                     time_list.append(time.end_time)
             return time_list
         except Exception as e:
-            MyLog.error('get_current_timer_rule has except: ' + str(e))
+            msg = MyLog.color_red("get_all_enable_timer_rule_time_list has except: " + str(e))
+            MyLog.logger.error(msg)
             return []
 
     #通过uuid获取规则的日期时间列表
@@ -285,7 +298,8 @@ class SqliteMng:
                 time_list.append(time_dict)
             return date_list, time_list
         except Exception as e:
-            MyLog.error('get_date_time_by_uuid has except: ' + str(e))
+            msg = MyLog.color_red("get_date_time_by_uuid has except: " + str(e))
+            MyLog.logger.error(msg)
             return date_list, time_list
 
     #筛选出触发原设备包含指定设备id并且当前时间点可以执行的联动规则，筛选条件：规则enable并且当前的日期时间在规则时间内
@@ -294,7 +308,7 @@ class SqliteMng:
         try:
             current_date = datetime.date.today()
             current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            MyLog.info("current time: %s"%(current_time))
+            MyLog.logger.info("current time: %s"%(current_time))
             rule_filter = {
                 and_(
                     and_(
@@ -331,5 +345,6 @@ class SqliteMng:
 
             return uuid_list
         except Exception as e:
-            MyLog.error('get_current_timer_rule has except: ' + str(e))
+            msg = MyLog.color_red("get_current_linkage_rule_by_src_devid has except: " + str(e))
+            MyLog.logger.error(msg)
             return []

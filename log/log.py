@@ -61,30 +61,17 @@ class MyLog:
 
         return True
 
-    @classmethod
-    def debug(cls, string):
-        cls.logger.debug(string)
+    @staticmethod
+    def color_red(msg):
+        return '\033[31m' + msg + '\033[0m'
 
-    @classmethod
-    def key(cls, string):
-        new_str = '\033[32m' + string + '\033[0m'
-        cls.logger.info(new_str)
-
-    @classmethod
-    def info(cls, string):
-        cls.logger.info(string)
-
-    @classmethod
-    def warning(cls, string):
-        cls.logger.warning(string)
-
-    @classmethod
-    def error(cls, string):
-        new_str = '\033[31m' + string + '\033[0m'
-        cls.logger.error(new_str)
+    @staticmethod
+    def color_green(msg):
+        return '\033[32m' + msg + '\033[0m'
 
 if __name__ == "__main__":
     MyLog.init(is_enable_std=True, log_period = 3, level = 'debug', 
         path = './')
-    MyLog.key('123')
-    MyLog.error('567890')
+    msg = MyLog.color_green('12455666777')
+    MyLog.logger.info(msg)
+    MyLog.logger.error('567890')
