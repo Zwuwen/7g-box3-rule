@@ -53,7 +53,7 @@ class DevCommandQueueMng:
                     #执行默认参数
                     msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.command, dev_id, command.priority))
                     MyLog.logger.info(msg)
-                    result, data = DevCall.call_service(dev_id, command.command)
+                    result, data = DevCall.call_service(dev_id, command.command, default=True)
                     msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 返回:%d'%(command.command, dev_id, result))
                     MyLog.logger.info(msg)
                     EventReport.report_default_command_status_event(dev_id, command.command, result)

@@ -129,7 +129,7 @@ class DevCall:
     通过RPC调用设备服务
     '''
     @staticmethod
-    def call_service(dev_id, service_name, params=None)->int:
+    def call_service(dev_id, service_name, params=None, default=False)->int:
         try:
             with ClusterRpcProxy(url) as rpc:
                 MyLog.logger.info('查询服务名称')
@@ -137,7 +137,7 @@ class DevCall:
                 msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
                 MyLog.logger.info(msg)
                 if dev_svr_name:
-                    if params:
+                    if not default:
                         msg = MyLog.color_green('RPC调用设备(%s)服务(%s),参数:%s'%(dev_id, service_name, json.dumps(params)))
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.ioctl'
