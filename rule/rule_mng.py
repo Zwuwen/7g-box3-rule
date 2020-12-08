@@ -347,6 +347,7 @@ class RuleMng:
             #从正在运行的队列中删除
             remove_running_rule_endtime(uuids)
             DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
+            DevCommandQueueMng.all_dev_exe()
             #规则决策
             return g_retValue.qjBoxOpcodeSucess.value
         except Exception as e:
@@ -480,6 +481,7 @@ class RuleMng:
             #从正在运行的队列中删除
             remove_running_rule_endtime(uuids)
             DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
+            DevCommandQueueMng.all_dev_exe()
 
             #规则决策
             RuleMng.start_new_rule_decision_timer(0)
