@@ -84,6 +84,8 @@ class RuleMng:
     def get_rule_timestamp(cls, uuid)->(float, float):
         date_list, time_list = SqliteInterface.get_date_time_by_uuid(uuid)
         if not date_list or not time_list:
+            msg = MyLog.color_red("get_rule_timestamp has not date_list or time_list")
+            MyLog.logger.error(msg)
             return 0, 0
 
         now_datetime = datetime.now()
@@ -123,6 +125,8 @@ class RuleMng:
             end_timestamp = datetime.timestamp(end_datetime)
             return start_timestamp, end_timestamp
         else:
+            msg = MyLog.color_red("get_rule_timestamp not find corresponding time")
+            MyLog.logger.error(msg)
             return 0, 0
 
     '''添加规则
