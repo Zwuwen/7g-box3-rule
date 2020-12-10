@@ -1,10 +1,11 @@
 #参数datetime.time，对比time1是否小于time2
 def compare_time(time1, time2):
     if (time1.hour < time2.hour) or (time1.hour == time2.hour and time1.minute < time2.minute)\
-            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second < time2.second):
+            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second < time2.second)\
+            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second == time2.second):
         return True
     else:
-        False
+        return False
 
 #time_list is datetime.time list
 def quite_sort_time_list(time_list, start, end):
