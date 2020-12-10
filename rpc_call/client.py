@@ -147,7 +147,8 @@ class DevCall:
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.set_default'
                         return eval(function_name)(dev_id, service_name)
-
+                else:
+                    return g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except Exception as e:
             msg = MyLog.color_red("call_service has except: " + str(e))
             MyLog.logger.error(msg)
