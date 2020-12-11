@@ -345,9 +345,12 @@ class RuleMng:
                 js_path = RULE_JS_SCRIPT_FOLDER + "/" + uuid + '.js'
                 py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
                 pyc_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.pyc'
-                os.remove(js_path)
-                os.remove(py_path)
-                os.remove(pyc_path)
+                if os.path.exists(js_path):
+                    os.remove(js_path)
+                if os.path.exists(py_path):
+                    os.remove(py_path)
+                if os.path.exists(pyc_path):
+                    os.remove(pyc_path)
             #从正在运行的队列中删除
             remove_running_rule_endtime(uuids)
             DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
