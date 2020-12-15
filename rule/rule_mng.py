@@ -323,10 +323,7 @@ class RuleMng:
     def get_all_rules(cls)->(int, list):
         ret, uuid_list = SqliteInterface.get_all_uuids()
         if ret:
-            dict = {}
-            dict['uuids'] = uuid_list
-            payload = json.dumps(dict)
-            return RuleMng.get_rule_by_uuid(payload)
+            return RuleMng.get_rule_by_uuid(uuid_list)
         else:
             return g_retValue.qjBoxOpcodeHandleSqlFailure.value, None
 
