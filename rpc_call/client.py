@@ -129,7 +129,7 @@ class DevCall:
     通过RPC调用设备服务
     '''
     @staticmethod
-    def call_service(dev_id, service_name, params=None, default=False)->int:
+    def call_service(dev_id, service_name, type, params=None, default=False)->int:
         try:
             with ClusterRpcProxy(url) as rpc:
                 MyLog.logger.info('查询服务名称')
@@ -137,16 +137,19 @@ class DevCall:
                 msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
                 MyLog.logger.info(msg)
                 if dev_svr_name:
+                    command_save = True
+                    if type == 'linkage':
+                        command_save = False
                     if not default:
-                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s),参数:%s'%(dev_id, service_name, json.dumps(params)))
+                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),参数:%s'%(dev_id, service_name, type, json.dumps(params)))
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.ioctl'
-                        return eval(function_name)(dev_id, service_name, params)
+                        return eval(function_name)(dev_id, service_name, command_save, params)
                     else:
-                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s),默认参数'%(dev_id, service_name))
+                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),默认参数'%(dev_id, service_name, type))
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.set_default'
-                        return eval(function_name)(dev_id, service_name)
+                        return eval(function_name)(dev_id, service_name, command_save)
                 else:
                     return g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except Exception as e:
