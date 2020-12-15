@@ -119,6 +119,8 @@ class DevCall:
                     if result == g_retValue.qjBoxOpcodeSucess.value:
                         return value
                     else:
+                        msg = MyLog.color_red('获取设备(%s)属性值(%s)返回None'%(dev_id, attr_name))
+                        MyLog.logger.error(msg)
                         return None
         except Exception as e:
             msg = MyLog.color_red("get_attributes has except: " + str(e))
