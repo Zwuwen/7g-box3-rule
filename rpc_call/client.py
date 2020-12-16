@@ -110,7 +110,10 @@ class DevCall:
     def get_attributes(dev_id, attr_name):
         try:
             with ClusterRpcProxy(url) as rpc:
+                MyLog.logger.info('查询服务名称')
                 dev_svr_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
+                msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
+                MyLog.logger.info(msg)
                 if dev_svr_name:
                     msg = MyLog.color_green('RPC调用设备(%s)获取属性值(%s)'%(dev_id, attr_name))
                     MyLog.logger.info(msg)
