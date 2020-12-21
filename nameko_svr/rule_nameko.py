@@ -24,7 +24,7 @@ class RuleNameko:
     def open(url = {'AMQP_URI': 'amqp://guest:guest@127.0.0.1'}):
         if not RuleNameko.nameko_fd:
             RuleNameko.url = url
-            eventlet.monkey_patch(all = False, os =True, select=True, socket=True, thread=False, time=True)
+            eventlet.monkey_patch(all = False, os =True, select=True, socket=True, thread=True, time=True)
             RuleNameko.nameko_fd = ServiceRunner(config = url)
             RuleNameko.nameko_fd.add_service(RuleService)
             RuleNameko.nameko_fd.start()
