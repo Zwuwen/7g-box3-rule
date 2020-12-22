@@ -500,7 +500,7 @@ class RuleMng:
 
     @classmethod
     def run_linkage_rule_by_devid(cls, dev_id)->None:
-        MyLog.logger.info('##########run_linkage_rule_by_devid############')
+        MyLog.logger.info(f'##########run_linkage_rule_by_devid({dev_id})############')
         uuid_list = SqliteInterface.get_current_linkage_rule_by_src_devid(dev_id)
         for uuid in uuid_list:
             py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
@@ -530,7 +530,7 @@ class RuleMng:
                     for command in dev_command['command_list']:
                         if continue_time < command['time']:
                             continue_time = command['time']
-                        command_info = CommandInfo(uuid, command['service'], command['param'], current_ts, current_ts + command['time'], priority, 'timer')
+                        command_info = CommandInfo(uuid, command['service'], command['param'], current_ts, current_ts + command['time'], priority, 'linkage')
                         command_info_list.append(command_info)
                     if command_info_list:
                         DevCommandQueueMng.add_linkage_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
