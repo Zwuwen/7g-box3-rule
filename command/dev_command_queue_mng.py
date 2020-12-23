@@ -48,12 +48,14 @@ class DevCommandQueueMng:
                 need_exe = True
 
             result = g_retValue.qjBoxOpcodeSucess.value
+            need_retry = False
+            service_has_recv = False
             if need_exe:
                 if command.default_param:
                     #执行默认参数
                     msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.command, dev_id, command.priority))
                     MyLog.logger.info(msg)
-                    result, data = DevCall.call_service(dev_id, command.command, command.type, default=True)
+                    need_retry, service_has_recv, result, data = DevCall.call_service(dev_id, command.command, command.type, default=True)
                     msg = MyLog.color_green('下发默认参数指令(%s)给设备(%s)服务, 返回:%d'%(command.command, dev_id, result))
                     MyLog.logger.info(msg)
                     EventReport.report_default_command_status_event(dev_id, command.command, result)
@@ -61,23 +63,23 @@ class DevCommandQueueMng:
                     #执行规则配置参数
                     msg = MyLog.color_green('下发规则(%s)指令(%s)给设备(%s)服务, 指令优先级:%d'%(command.uuid, command.command, dev_id, command.priority))
                     MyLog.logger.info(msg)
-                    result, data = DevCall.call_service(dev_id, command.command, command.type, command.params)
+                    need_retry, service_has_recv, result, data = DevCall.call_service(dev_id, command.command, command.type, command.params)
                     msg = MyLog.color_green('下发规则(%s)指令(%s)给设备(%s)服务, 返回:%d'%(command.uuid, command.command, dev_id, result))
                     MyLog.logger.info(msg)
                     #上报ruleCommandStatus event
                     EventReport.report_rule_command_status_event(command.uuid, dev_id, command.command, result)
 
-                if result == g_retValue.qjBoxOpcodeSucess.value:
+                if service_has_recv:
                     dev_command_queue.set_current_running_command(command_name, command)
+                    if need_report_rule_command_cover_event:
+                        EventReport.report_rule_command_cover_event(dev_id, command.command, running_command.uuid, command.uuid)
 
-                if need_report_rule_command_cover_event and result == g_retValue.qjBoxOpcodeSucess.value:
-                    EventReport.report_rule_command_cover_event(dev_id, command.command, running_command.uuid, command.uuid)
-
-            return result
+            return need_retry, service_has_recv, result
         except Exception as e:
             msg = MyLog.color_red('command_exe has except: ' + str(e))
             MyLog.logger.error(msg)
-            return g_retValue.qjBoxOpcodeExcept.value
+            return False, False, g_retValue.qjBoxOpcodeExcept.value
+
 
     '''针对一个设备做一次指令决策执行'''
     @staticmethod
@@ -86,19 +88,18 @@ class DevCommandQueueMng:
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         need_run_command_list = dev_command_queue.get_highest_priority_command_list()
         MyLog.logger.info('设备(%s) need_run_command_list size:%d'%(dev_id, len(need_run_command_list)))
-        is_all_success = True
+        is_need_retry = False
         for run_command in need_run_command_list:
             MyLog.logger.info('设备(%s)run command: %s'%(dev_id,run_command.command))
-            ret = DevCommandQueueMng.command_exe(dev_id, run_command)
-            if g_retValue.qjBoxOpcodeSucess.value == ret:
+            need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, run_command)
+            if service_has_recv:
                 # 如果当前最高等级的规则类型不为联动，就要清除该指令队列中存在的类型为联动的指令
                 if run_command.type != 'linkage':
                     dev_command_queue.clear_linkage_command(run_command.command)
-            elif g_retValue.qjBoxOpcodeExcept.value != ret:
-                    #错误不为程序异常才认为错误，程序异常就不需要一直重试了。
-                    is_all_success = False
+            elif need_retry:
+                is_need_retry = True
         #如果所有指令执行成功，那么重置定时器为所有指令中下一次最近的时间，如果有失败，那就定时60秒后重试。
-        if is_all_success:
+        if not is_need_retry:
             DevCommandQueueMng.__reset_dev_timer(dev_id)
         else:
             DevCommandQueueMng.__reset_dev_timer_by_time(dev_id, 60)
@@ -191,7 +192,8 @@ class DevCommandQueueMng:
                     break
 
             if need_exe:
-                if g_retValue.qjBoxOpcodeSucess.value == DevCommandQueueMng.command_exe(dev_id, command):
+                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
+                if service_has_recv:
                     dev_command_queue.clear_linkage_command(command.command)
                     need_add_to_command_queue_list.append(command)
 
@@ -231,7 +233,8 @@ class DevCommandQueueMng:
                     break
 
             if need_exe:
-                if g_retValue.qjBoxOpcodeSucess.value == DevCommandQueueMng.command_exe(dev_id, command):
+                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
+                if service_has_recv:
                     # 如果执行临时手动指令，则联动指令已被顶替失效，删除
                     dev_command_queue.clear_linkage_command(command.command)
 
