@@ -42,6 +42,9 @@ class DevCommandQueueMng:
                 MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
                 if running_command.uuid != command.uuid:
                     need_exe = True
+                else:
+                    msg = MyLog.color_green('指令执行 设备id:%s, 指令名称:%s, 规则:%s 已经在执行中，不需要重新下发'%(dev_id, command.command, command.uuid))
+                    MyLog.logger.info(msg)
                 if running_command.priority < command.priority:
                     need_report_rule_command_cover_event = True
             else:
