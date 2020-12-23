@@ -148,20 +148,22 @@ class DevCall:
                     if type == 'linkage':
                         command_save = False
                     if not default:
-                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),参数:%s'%(dev_id, service_name, type, json.dumps(params)))
+                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),参数:%s'%(dev_id, service_name, type, params))
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.ioctl'
-                        return False, True, eval(function_name)(dev_id, service_name, command_save, params)
+                        ret, data = eval(function_name)(dev_id, service_name, command_save, params)
+                        return False, True, ret, data
                     else:
                         msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),默认参数'%(dev_id, service_name, type))
                         MyLog.logger.info(msg)
                         function_name = 'rpc.' + dev_svr_name + '.set_default'
-                        return False, True, eval(function_name)(dev_id, service_name, command_save)
+                        ret, data = eval(function_name)(dev_id, service_name, command_save)
+                        return False, True, ret, data
                 else:
                     return False, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except UnknownService as e:
             return True, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except Exception as e:
-            msg = MyLog.color_red("call_service has except: " + str(e))
+            msg = MyLog.color_red("DevCall call_service has except: " + str(e))
             MyLog.logger.error(msg)
             return True, False, g_retValue.qjBoxOpcodeExcept.value, {}

@@ -27,7 +27,7 @@ class DevCommandQueueMng:
         成功返回True，失败返回False
     '''
     @staticmethod
-    def command_exe(dev_id, command:CommandInfo)->int:
+    def command_exe(dev_id, command:CommandInfo):
         MyLog.logger.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
         try:
             #先获取指令名称
@@ -42,8 +42,8 @@ class DevCommandQueueMng:
                 MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
                 if running_command.uuid != command.uuid:
                     need_exe = True
-                    if not running_command.default_param:
-                        need_report_rule_command_cover_event = True
+                if running_command.priority < command.priority:
+                    need_report_rule_command_cover_event = True
             else:
                 need_exe = True
 
