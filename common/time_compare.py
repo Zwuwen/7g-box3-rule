@@ -2,7 +2,8 @@
 def compare_time(time1, time2):
     if (time1.hour < time2.hour) or (time1.hour == time2.hour and time1.minute < time2.minute)\
             or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second < time2.second)\
-            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second == time2.second):
+            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second == time2.second and time1.microsecond < time2.microsecond)\
+            or (time1.hour == time2.hour and time1.minute == time2.minute and time1.second == time2.second and time1.microsecond == time2.microsecond):
         return True
     else:
         return False

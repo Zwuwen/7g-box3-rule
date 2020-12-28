@@ -35,7 +35,7 @@ class RuleMng:
             uuid_list = SqliteInterface.get_current_timer_rule()
             #计算出下一次最近的执行时间戳,启动定时器
             next_decision_time = cls.get_closest_timestamp()
-            if next_decision_time > 0:
+            if next_decision_time > 0.0:
                 RuleMng.start_new_rule_decision_timer(next_decision_time)
             #执行规则，将规则指令下发给指令管理器
             MyLog.logger.info('uuid_list size: ' + str(len(uuid_list)))
@@ -723,7 +723,8 @@ class RuleMng:
     def get_closest_timestamp(cls)->float:
         time_list = SqliteInterface.get_all_enable_timer_rule_time_list()
         if not time_list:
-            return 0
+            MyLog.logger.debug("time_list is none")
+            return 0.0
 
         now_datetime = datetime.now()
         now_time = now_datetime.time()
@@ -745,9 +746,9 @@ class RuleMng:
             #下一天最早的时间
             MyLog.logger.debug("time is in next day")
             next_day = datetime.now() + timedelta(days=1)
-            closest_datetime = datetime(next_day.year, next_day.month, next_day.day, smallest_time.hour, smallest_time.minute, smallest_time.second)
+            closest_datetime = datetime(next_day.year, next_day.month, next_day.day, smallest_time.hour, smallest_time.minute, smallest_time.second, smallest_time.microsecond)
         else:
-            closest_datetime = datetime(now_datetime.year, now_datetime.month, now_datetime.day, closest_time.hour, closest_time.minute, closest_time.second)
+            closest_datetime = datetime(now_datetime.year, now_datetime.month, now_datetime.day, closest_time.hour, closest_time.minute, closest_time.second, smallest_time.microsecond)
 
         closest_timestamp = datetime.timestamp(closest_datetime)
         now_timestamp = datetime.timestamp(now_datetime)
