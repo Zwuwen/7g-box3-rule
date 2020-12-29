@@ -500,47 +500,54 @@ class RuleMng:
 
     @classmethod
     def run_linkage_rule_by_devid(cls, dev_id)->None:
-        MyLog.logger.info(f'##########run_linkage_rule_by_devid({dev_id})############')
-        uuid_list = SqliteInterface.get_current_linkage_rule_by_src_devid(dev_id)
-        for uuid in uuid_list:
-            py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
-            if not os.path.exists(py_path):
-                msg = MyLog.color_red("run_linkage_rule_by_devid: py(%s) is not exist"%(py_path))
-                MyLog.logger.error(msg)
-                continue
-            #执行脚本
-            py_import_path = RULE_PY_MODEL_PATH + uuid
-            MyLog.logger.debug('py_import_path: ' + py_import_path)
-            file = importlib.import_module(py_import_path)
-            importlib.reload(file)
-            MyLog.logger.debug('run script fun')
-            #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
-            dev_command_list, event_list = file.script_fun()
-            MyLog.logger.debug('dev_command_list size: ' + str(len(dev_command_list)))
-            if dev_command_list or event_list:
-                priority = SqliteInterface.get_priority_by_uuid(uuid)
-                if priority < 0:
+        try:
+            MyLog.logger.info(f'##########run_linkage_rule_by_devid({dev_id})############')
+            uuid_list = SqliteInterface.get_current_linkage_rule_by_src_devid(dev_id)
+            msg = f"get_current_linkage_rule_by_src_devid({dev_id}, sizeof uuid_list = {len(uuid_list)})"
+            MyLog.logger.debug(msg)
+            for uuid in uuid_list:
+                py_path = RULE_PY_SCRIPT_FOLDER + "/" + uuid + '.py'
+                if not os.path.exists(py_path):
+                    msg = MyLog.color_red("run_linkage_rule_by_devid: py(%s) is not exist"%(py_path))
+                    MyLog.logger.error(msg)
                     continue
-                current_ts = time.time()
-                # 上报规则开始执行
-                EventReport.report_rule_start_event(uuid)
-                continue_time = 1
-                for dev_command in dev_command_list:
-                    command_info_list = []
-                    for command in dev_command['command_list']:
-                        if continue_time < command['time']:
-                            continue_time = command['time']
-                        command_info = CommandInfo(uuid, command['service'], command['param'], current_ts, current_ts + command['time'], priority, 'linkage')
-                        command_info_list.append(command_info)
-                    if command_info_list:
-                        DevCommandQueueMng.add_linkage_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
+                #执行脚本
+                py_import_path = RULE_PY_MODEL_PATH + uuid
+                MyLog.logger.debug('py_import_path: ' + py_import_path)
+                file = importlib.import_module(py_import_path)
+                importlib.reload(file)
+                MyLog.logger.debug('run script fun')
+                #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
+                dev_command_list, event_list = file.script_fun()
+                msg = f'dev_command_list size: {len(dev_command_list)}, event_list size: {len(event_list)}'
+                MyLog.logger.debug(msg)
+                if dev_command_list or event_list:
+                    priority = SqliteInterface.get_priority_by_uuid(uuid)
+                    if priority < 0:
+                        continue
+                    current_ts = time.time()
+                    # 上报规则开始执行
+                    EventReport.report_rule_start_event(uuid)
+                    continue_time = 1
+                    for dev_command in dev_command_list:
+                        command_info_list = []
+                        for command in dev_command['command_list']:
+                            if continue_time < command['time']:
+                                continue_time = command['time']
+                            command_info = CommandInfo(uuid, command['service'], command['param'], current_ts, current_ts + command['time'], priority, 'linkage')
+                            command_info_list.append(command_info)
+                        if command_info_list:
+                            DevCommandQueueMng.add_linkage_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
 
-                end_ts = current_ts + continue_time
-                uuid_endtime_list = [{'uuid': uuid, 'end_ts': end_ts}]
-                add_running_rule_endtime(uuid_endtime_list)
+                    end_ts = current_ts + continue_time
+                    uuid_endtime_list = [{'uuid': uuid, 'end_ts': end_ts}]
+                    add_running_rule_endtime(uuid_endtime_list)
 
-                for custom_event in event_list:
-                    EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
+                    for custom_event in event_list:
+                        EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
+        except Exception as e:
+            msg = MyLog.color_red('run_linkage_rule_by_devid has except: ' + str(e))
+            MyLog.logger.error(msg)
 
     #停止联动规则执行
     @classmethod

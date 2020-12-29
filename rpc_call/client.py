@@ -67,7 +67,7 @@ class EventReport:
     @staticmethod
     def report_linkage_custom_event(eventId, srcList):
         try:
-            msg = MyLog.color_green('上报用户自定义事件 eventid=%s'%(eventId))
+            msg = MyLog.color_green(f'上报用户自定义事件 eventid={eventId} srcList={srcList}')
             MyLog.logger.info(msg)
             with ClusterRpcProxy(url) as rpc:
                 resp = rpc.GW.raiseEvent.call_async('customEvent', eventId=eventId, srcList=srcList)
