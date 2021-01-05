@@ -121,6 +121,8 @@ class DevCall:
                     function_name = 'rpc.' + dev_svr_name +'.property_read'
                     result, value = eval(function_name)(dev_id, attr_name)
                     if result == g_retValue.qjBoxOpcodeSucess.value:
+                        msg = MyLog.color_green(f'RPC调用设备({dev_id})获取属性值({attr_name}:{value})')
+                        MyLog.logger.info(msg)
                         return value
                     else:
                         msg = MyLog.color_red('获取设备(%s)属性值(%s)返回错误(%s)'%(dev_id, attr_name, g_retValue(result).name))
