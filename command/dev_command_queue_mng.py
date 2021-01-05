@@ -2,7 +2,7 @@ __date__ = '2020/10/29'
 __author__ = 'wanghaiquan'
 import os
 import sys
-from threading import Timer
+from threading import Timer, Lock
 import time
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -20,14 +20,31 @@ from log.log import MyLog
 3. 该设备的指令执行定时器
 '''
 g_dev_command_queue_list = []
-
+g_dev_exe_locker_dict = {}
+g_exe_locker_dict_locker = Lock()
 
 class DevCommandQueueMng:
+    '''获取指定设备的指令执行锁
+        返回锁，如果不存在则先创建
+    '''
+    @staticmethod
+    def get_exe_locker(dev_id):
+        g_exe_locker_dict_locker.acquire()
+        if dev_id in g_dev_exe_locker_dict.keys():
+            g_exe_locker_dict_locker.release()
+            return g_dev_exe_locker_dict[dev_id]
+        else:
+            g_dev_exe_locker_dict[dev_id] = Lock()
+            g_exe_locker_dict_locker.release()
+            return g_dev_exe_locker_dict[dev_id]
+
     ''' 指令执行
         成功返回True，失败返回False
     '''
     @staticmethod
     def command_exe(dev_id, command:CommandInfo):
+        lk = DevCommandQueueMng.get_exe_locker(dev_id)
+        lk.acquire()
         MyLog.logger.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
         try:
             #先获取指令名称
@@ -76,9 +93,10 @@ class DevCommandQueueMng:
                     dev_command_queue.set_current_running_command(command_name, command)
                     if need_report_rule_command_cover_event:
                         EventReport.report_rule_command_cover_event(dev_id, command.command, running_command.uuid, command.uuid)
-
+            lk.release()
             return need_retry, service_has_recv, result
         except Exception as e:
+            lk.release()
             msg = MyLog.color_red('command_exe has except: ' + str(e))
             MyLog.logger.error(msg)
             return False, False, g_retValue.qjBoxOpcodeExcept.value
