@@ -174,37 +174,45 @@ class DevCommandQueueMng:
     '''
     @staticmethod
     def add_linkage_command(product_id, dev_id, command_list)->None:
-        need_add_to_command_queue_list = []
-        dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
-        if not dev_command_queue:
-            dict = {}
-            dict["dev_id"] = dev_id
-            dev_command_queue = DevCommandQueue(product_id, dev_id)
-            dict["dev_command_queue"] = dev_command_queue
-            g_dev_command_queue_list.append(dict)
+        def add_linkage_command_body(product_id, dev_id, command_list):
+            try:
+                need_add_to_command_queue_list = []
+                dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
+                if not dev_command_queue:
+                    dict = {}
+                    dict["dev_id"] = dev_id
+                    dev_command_queue = DevCommandQueue(product_id, dev_id)
+                    dict["dev_command_queue"] = dev_command_queue
+                    g_dev_command_queue_list.append(dict)
 
-        highest_priority_command_list = dev_command_queue.get_highest_priority_command_list()
-        for command in command_list:
-            need_exe = True
-            for highest_priority_command in highest_priority_command_list:
-                if command.command == highest_priority_command.command:
-                    MyLog.logger.info('command.command = %s, command.priority = %d, highest_priority_command.priority = %d'%(command.command, command.priority, highest_priority_command.priority))
-                    if command.priority <= highest_priority_command.priority:
-                        EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
-                        need_exe = False
-                    break
+                highest_priority_command_list = dev_command_queue.get_highest_priority_command_list()
+                for command in command_list:
+                    need_exe = True
+                    for highest_priority_command in highest_priority_command_list:
+                        if command.command == highest_priority_command.command:
+                            MyLog.logger.info('command.command = %s, command.priority = %d, highest_priority_command.priority = %d'%(command.command, command.priority, highest_priority_command.priority))
+                            if command.priority <= highest_priority_command.priority:
+                                EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
+                                need_exe = False
+                            break
 
-            if need_exe:
-                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
-                if service_has_recv:
-                    dev_command_queue.clear_linkage_command(command.command)
-                    need_add_to_command_queue_list.append(command)
+                    if need_exe:
+                        need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
+                        if service_has_recv:
+                            dev_command_queue.clear_linkage_command(command.command)
+                            need_add_to_command_queue_list.append(command)
 
-        if need_add_to_command_queue_list:
-            MyLog.logger.info('dev_command_queue.add_linkage_command_list size: %d'%(len(need_add_to_command_queue_list)))
-            dev_command_queue.add_linkage_command_list(need_add_to_command_queue_list)
-            name_list = dev_command_queue.get_all_command_name_list()
-            DevCommandQueueMng.__reset_dev_timer(dev_id)
+                if need_add_to_command_queue_list:
+                    MyLog.logger.info('dev_command_queue.add_linkage_command_list size: %d'%(len(need_add_to_command_queue_list)))
+                    dev_command_queue.add_linkage_command_list(need_add_to_command_queue_list)
+                    name_list = dev_command_queue.get_all_command_name_list()
+                    DevCommandQueueMng.__reset_dev_timer(dev_id)
+            except Exception as e:
+                msg = MyLog.color_red('add_linkage_command_body has exception: ' + str(e))
+                MyLog.logger.error(msg)
+
+        timer = Timer(0, add_linkage_command_body, args=(product_id, dev_id, command_list,))
+        timer.start()
 
     '''
     添加临时手动指令
