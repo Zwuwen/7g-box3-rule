@@ -169,3 +169,17 @@ class DevCall:
             msg = MyLog.color_red("DevCall call_service has except: " + str(e))
             MyLog.logger.error(msg)
             return True, False, g_retValue.qjBoxOpcodeExcept.value, {}
+
+    '''
+    获取管理服务的就绪状态
+    返回 True 就绪  False 未就绪
+    '''
+    @staticmethod
+    def mng_srv_ready():
+        try:
+            with ClusterRpcProxy(url) as rpc:
+                return rpc.mng_srv.ready_go()
+        except Exception as e:
+            msg = MyLog.color_red("mng_srv_ready has except: " + str(e))
+            MyLog.logger.error(msg)
+            return False
