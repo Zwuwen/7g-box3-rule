@@ -5,7 +5,7 @@ __author__ = 'wanghaiquan'
 提供添加，删除接口
 使用一个定时器定时处理到期的规则，上报规则结束事件
 '''
-from threading import Timer
+from threading import Timer, Lock
 import time
 from rpc_call.client import EventReport
 from command.dev_command_queue_mng import DevCommandQueueMng
@@ -14,6 +14,7 @@ from log.log import MyLog
 #记录正在执行的规则uuid:结束时间戳字典列表 [{"uuid":"", "end_ts":12345}]
 g_running_rule_endtime_list = []
 g_running_rule_endtime_handle_timer = None
+g_lk = Lock()
 
 
 def running_rule_endtime_handle():
@@ -21,6 +22,7 @@ def running_rule_endtime_handle():
     current_ts = time.time()
     smallest_ts = 0
     uuid_list = []
+    g_lk.acquire()
     for rule in g_running_rule_endtime_list:
         if rule['end_ts'] < current_ts:
             MyLog.logger.info("规则(%s)结束"%(rule['uuid']))
@@ -33,7 +35,7 @@ def running_rule_endtime_handle():
                 smallest_ts = rule['end_ts']
             elif rule['end_ts'] < smallest_ts:
                 smallest_ts = rule['end_ts']
-
+    g_lk.release()
     if uuid_list:
         # 删除结束规则的指令
         DevCommandQueueMng.clear_command_by_rule_uuid(uuid_list)
@@ -51,6 +53,7 @@ def running_rule_endtime_handle():
 
 '''uuid_end_ts_list = [{"uuid":"", "end_ts":12345}]'''
 def add_running_rule_endtime(uuid_end_ts_list):
+    g_lk.acquire()
     for add in uuid_end_ts_list:
         is_new = True
         for l in g_running_rule_endtime_list:
@@ -63,7 +66,7 @@ def add_running_rule_endtime(uuid_end_ts_list):
             new['uuid'] = add['uuid']
             new['end_ts'] = add['end_ts']
             g_running_rule_endtime_list.append(new)
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
@@ -72,13 +75,14 @@ def add_running_rule_endtime(uuid_end_ts_list):
     g_running_rule_endtime_handle_timer.start()
 
 def remove_running_rule_endtime(uuid_list):
+    g_lk.acquire()
     for uuid in uuid_list:
         for rule in g_running_rule_endtime_list:
             if rule['uuid'] == uuid:
                 g_running_rule_endtime_list.remove(rule)
                 EventReport.report_rule_end_event(rule['uuid'])
                 break
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
@@ -87,11 +91,12 @@ def remove_running_rule_endtime(uuid_list):
     g_running_rule_endtime_handle_timer.start()
 
 def clear_all_running_rule_endtime():
+    g_lk.acquire()
     for rule in g_running_rule_endtime_list:
         g_running_rule_endtime_list.remove(rule)
         EventReport.report_rule_end_event(rule['uuid'])
         break
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
