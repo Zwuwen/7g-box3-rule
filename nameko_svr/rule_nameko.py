@@ -116,33 +116,35 @@ class RuleService:
     }
     返回 1. 结果码
         2. 规则列表
-        [
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
+        {
+            rules:[
+                {
+                    "uuid":"",
+                    "enable": true,
+                    "type": "timer",
+                    "priority": 55,
+                    "date":[
+                        {
+                            "startDate":"2020-10-01",
+                            "endDate":"2020-10-08"
+                        }
+                    ],
+                    "time":[
+                        {
+                            "startTime":"00:00:00",
+                            "endTime":"18:00:00"
+                        }
+                    ],
+                    "srcDevice":[
+                        "s1","s2"
+                    ],
+                    "dstDevice":[
+                        "d1","d2"
+                    ],
+                    "script":""
+                }
+            ]
+        }
     '''
     @rpc
     def get_rule_by_uuid(self, uuids)->(int, list):
@@ -154,33 +156,35 @@ class RuleService:
     '''获取所有uuid的规则
     返回 1. 结果码
         2. 规则字典
-        [
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
+        {
+            rules:[
+                {
+                    "uuid":"",
+                    "enable": true,
+                    "type": "timer",
+                    "priority": 55,
+                    "date":[
+                        {
+                            "startDate":"2020-10-01",
+                            "endDate":"2020-10-08"
+                        }
+                    ],
+                    "time":[
+                        {
+                            "startTime":"00:00:00",
+                            "endTime":"18:00:00"
+                        }
+                    ],
+                    "srcDevice":[
+                        "s1","s2"
+                    ],
+                    "dstDevice":[
+                        "d1","d2"
+                    ],
+                    "script":""
+                }
+            ]
+        }
     '''
     @rpc
     def get_all_rules(self)->(int, list):

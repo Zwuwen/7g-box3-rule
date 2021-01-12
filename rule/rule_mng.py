@@ -214,37 +214,40 @@ class RuleMng:
 
     返回 1. 结果码
         2. 规则列表
-        [
-            {
-                "uuid":"",
-                "enable": true,
-                "type": "timer",
-                "priority": 55,
-                "date":[
-                    {
-                        "startDate":"2020-10-01",
-                        "endDate":"2020-10-08"
-                    }
-                ],
-                "time":[
-                    {
-                        "startTime":"00:00:00",
-                        "endTime":"18:00:00"
-                    }
-                ],
-                "srcDevice":[
-                    "s1","s2"
-                ],
-                "dstDevice":[
-                    "d1","d2"
-                ],
-                "script":""
-            }
-        ]
+        {
+            rules:[
+                {
+                    "uuid":"",
+                    "enable": true,
+                    "type": "timer",
+                    "priority": 55,
+                    "date":[
+                        {
+                            "startDate":"2020-10-01",
+                            "endDate":"2020-10-08"
+                        }
+                    ],
+                    "time":[
+                        {
+                            "startTime":"00:00:00",
+                            "endTime":"18:00:00"
+                        }
+                    ],
+                    "srcDevice":[
+                        "s1","s2"
+                    ],
+                    "dstDevice":[
+                        "d1","d2"
+                    ],
+                    "script":""
+                }
+            ]
+        }
     '''
     @classmethod
     def get_rule_by_uuid(cls, uuids)->(int, list):
         try:
+            rules = {}
             rule_list = []
             for uuid in uuids:
                 rule_dict = {}
@@ -282,7 +285,8 @@ class RuleMng:
                             rule_dict['script'] = fp.read()
 
                     rule_list.append(rule_dict)
-            return g_retValue.qjBoxOpcodeSucess.value, rule_list
+                    rules["rules"] = rule_list
+            return g_retValue.qjBoxOpcodeSucess.value, rules
         except Exception as e:
             return g_retValue.qjBoxOpcodeExcept.value, None
 
