@@ -31,12 +31,14 @@ class DevCommandQueueMng:
     def get_exe_locker(dev_id):
         g_exe_locker_dict_locker.acquire()
         if dev_id in g_dev_exe_locker_dict.keys():
+            lk = g_dev_exe_locker_dict[dev_id]
             g_exe_locker_dict_locker.release()
-            return g_dev_exe_locker_dict[dev_id]
+            return lk
         else:
             g_dev_exe_locker_dict[dev_id] = Lock()
+            lk = g_dev_exe_locker_dict[dev_id]
             g_exe_locker_dict_locker.release()
-            return g_dev_exe_locker_dict[dev_id]
+            return lk
 
     ''' 指令执行
         focus 是否强制指令执行
