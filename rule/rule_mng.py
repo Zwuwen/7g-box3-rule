@@ -168,8 +168,9 @@ class RuleMng:
                 if SqliteInterface.rule_exist(rule_dict['uuid']):
                     msg = MyLog.color_red("rule(%s) has exist"%(rule_dict['uuid']))
                     MyLog.logger.error(msg)
-                    continue
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
 
+            for rule_dict in rules:
                 if not cls.__check_keys_exists(rule_dict, keys):
                     #返回参数错误
                     msg = MyLog.color_red('key param not exist')
