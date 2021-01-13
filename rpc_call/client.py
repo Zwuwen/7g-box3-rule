@@ -103,6 +103,7 @@ class EventReport:
             return None
 
 
+g_dev_id_to_srv_name_map_dict = {}
 class DevCall:
     '''
     通过RPC向设备服务获取指定设备的属性
@@ -141,10 +142,7 @@ class DevCall:
     def call_service(dev_id, service_name, type, params=None, default=False):
         try:
             with ClusterRpcProxy(url) as rpc:
-                MyLog.logger.info(f'查询设备({dev_id})服务名称')
-                dev_svr_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
-                msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
-                MyLog.logger.info(msg)
+                dev_svr_name = DevCall.query_srv_name_by_dev_id(dev_id)
                 if dev_svr_name:
                     command_save = True
                     if type == 'linkage':
@@ -185,3 +183,18 @@ class DevCall:
             msg = MyLog.color_red("mng_srv_ready has except: " + str(e))
             MyLog.logger.error(msg)
             return False
+
+    @staticmethod
+    def query_srv_name_by_dev_id(dev_id):
+        if dev_id in g_dev_id_to_srv_name_map_dict.keys():
+            dev_srv_name = g_dev_id_to_srv_name_map_dict[dev_id]
+            msg = MyLog.color_green('从内存获取到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
+            MyLog.logger.info(msg)
+            return dev_srv_name
+        else:
+            MyLog.logger.info(f'RPC查询设备({dev_id})服务名称')
+            dev_srv_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
+            msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
+            MyLog.logger.info(msg)
+            g_dev_id_to_srv_name_map_dict[dev_id] = dev_srv_name
+            return dev_srv_name
