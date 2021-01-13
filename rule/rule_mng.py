@@ -430,7 +430,7 @@ class RuleMng:
             remove_running_rule_endtime(uuid_list)
             #删除指令队列中的相关指令
             DevCommandQueueMng.clear_command_by_rule_uuid(uuid_list)
-
+            DevCommandQueueMng.all_dev_exe()
             #重新添加规则
             ret = RuleMng.add_rule(rules)
             return ret
