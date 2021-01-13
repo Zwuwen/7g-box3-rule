@@ -39,10 +39,11 @@ class DevCommandQueueMng:
             return g_dev_exe_locker_dict[dev_id]
 
     ''' 指令执行
+        focus 是否强制指令执行
         成功返回True，失败返回False
     '''
     @staticmethod
-    def command_exe(dev_id, command:CommandInfo):
+    def command_exe(dev_id, command:CommandInfo, focus = False):
         lk = DevCommandQueueMng.get_exe_locker(dev_id)
         lk.acquire()
         MyLog.logger.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
@@ -54,7 +55,9 @@ class DevCommandQueueMng:
             running_command = dev_command_queue.get_current_running_command(command_name)
             need_exe = False
             need_report_rule_command_cover_event = False
-            if running_command:
+            if focus:
+                need_exe = True
+            elif running_command:
                 #判断是否为同一个规则指令，如果不是才允许执行
                 MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
                 if running_command.uuid != command.uuid:
@@ -256,13 +259,15 @@ class DevCommandQueueMng:
             need_exe = True
             for highest_priority_command in highest_priority_command_list:
                 if command.command == highest_priority_command.command:
-                    if command.priority <= highest_priority_command.priority:
+                    # 同一优先级的临时手动命令需要更新执行
+                    if (highest_priority_command.type == 'manual' and command.priority < highest_priority_command.priority) or \
+                       (highest_priority_command.type != 'manual' and command.priority <= highest_priority_command.priority):
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
                         need_exe = False
                     break
 
             if need_exe:
-                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
+                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, focus = True)
                 if service_has_recv:
                     # 如果执行临时手动指令，则联动指令已被顶替失效，删除
                     dev_command_queue.clear_linkage_command(command.command)
