@@ -54,6 +54,12 @@ class g_retValue(Enum):
     qjBoxOpcodeDataFormatError    = 29#数据格式错误
     qjBoxOpcodeLackAuthority      = 30#没有权限
     qjBoxOpcodeExcept             = 31#程序捕获异常
+    qjBoxOpcodeInAuto             = 32#设备处于自动模式
+    qjBoxOpcodeInManual           = 33#设备处于手动模式
+    qjBoxOpcodeDecompressionFailure = 34#解压失败
+    qjBoxOpcodeInLogout           = 35#设备未认证
+    qjBoxOpcodeReadOnly           = 36#只读
+    qjBoxOpcodeDeviceReturnFailed = 37#设备返回执行失败
     #数据库 sql
     qjBoxOpcodeConSqlFailure      = 50#链接数据库失败
     qjBoxOpcodeHandleSqlFailure   = 51#操作数据库失败
