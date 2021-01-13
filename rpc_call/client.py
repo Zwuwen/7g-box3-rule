@@ -141,7 +141,7 @@ class DevCall:
     def call_service(dev_id, service_name, type, params=None, default=False):
         try:
             with ClusterRpcProxy(url) as rpc:
-                MyLog.logger.info('查询服务名称')
+                MyLog.logger.info(f'查询设备({dev_id})服务名称')
                 dev_svr_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
                 msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
                 MyLog.logger.info(msg)
@@ -164,6 +164,8 @@ class DevCall:
                 else:
                     return False, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except UnknownService as e:
+            msg = MyLog.color_red("DevCall call_service has UnknownService except: " + str(e))
+            MyLog.logger.error(msg)
             return True, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except Exception as e:
             msg = MyLog.color_red("DevCall call_service has except: " + str(e))
