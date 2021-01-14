@@ -246,7 +246,7 @@ class RuleMng:
         }
     '''
     @classmethod
-    def get_rule_by_uuid(cls, uuids)->(int, list):
+    def get_rule_by_uuid(cls, uuids)->(int, dict):
         try:
             rules = {}
             rule_list = []
@@ -325,7 +325,7 @@ class RuleMng:
     }
     '''
     @classmethod
-    def get_all_rules(cls)->(int, list):
+    def get_all_rules(cls)->(int, dict):
         ret, uuid_list = SqliteInterface.get_all_uuids()
         if ret:
             return RuleMng.get_rule_by_uuid(uuid_list)

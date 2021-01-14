@@ -37,6 +37,7 @@ class DevCommandQueue:
             is_new_command = True
             for queue in self.__queues:
                 if 'command_name' in queue and queue['command_name'] == command.command:
+                    MyLog.logger.info(f"添加定时指令({command.command})到指令列表, uuid:{command.uuid} priority:{command.priority}")
                     #判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
@@ -45,12 +46,16 @@ class DevCommandQueue:
                             uuid_has_exist = True
                             #更新
                             c = command
+                            MyLog.logger.info(f"更新定时指令({command.command})")
                             break
 
                     if not uuid_has_exist:
                         #新加
+                        MyLog.logger.info(f"新加定时指令({command.command})")
                         queue['command_queue'].append(command)
+                    break
             if is_new_command:
+                MyLog.logger.info(f"新指令({command.command})队列")
                 new_command_sub_queue = {}
                 new_command_sub_queue['command_name'] = command.command
                 new_command_sub_queue['command_queue'] = []
@@ -179,7 +184,6 @@ class DevCommandQueue:
     ''' 根据指令获取当前时间点可以执行的优先级最高的指令
         如果该指令队列存在，但队列为空，则返回默认指令 '''
     def get_highest_priority_command_by_command_name(self, command_name)->CommandInfo:
-        self.__lock.acquire()
         ts = time.time()
         MyLog.logger.info("get_highest_priority_command_by_command_name: %s"%(command_name))
         for queue in self.__queues:
@@ -187,22 +191,24 @@ class DevCommandQueue:
             if 'command_name' in queue and queue['command_name'] == command_name:
                 command_queue:list = queue["command_queue"]
                 if command_queue:
+                    MyLog.logger.info(f"find the highest priority command({command_name})")
+                    del_command_list = []
                     for command in command_queue:
                         if command.start_ts > ts or command.end_ts < ts:
                             #指令不在有效期内，删除
-                            command_queue.remove(command)
+                            del_command_list.append(command)
                             continue
-                        if highest_command == None:
-                            highest_command = command_queue[0]
-                        elif command.priority > highest_command.priority:
+                        if highest_command == None or command.priority > highest_command.priority:
+                            MyLog.logger.info(f"new highest_command uuid:{command.uuid}, priority:{command.priority}, type:{command.type}")
                             highest_command = command
+                    for del_command in del_command_list:
+                        command_queue.remove(del_command)
                     if highest_command == None:
                         break
                     else:
-                        self.__lock.release()
                         return highest_command
+        MyLog.logger.info(f"device({self.__dev_id}) has no command({command_name}) found")
         default_command = CommandInfo(command=command_name, default_param=True)
-        self.__lock.release()
         return default_command
 
     ''' 获取距离当前时间点最近指令时间点（start_ts，end_ts）

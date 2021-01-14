@@ -111,24 +111,24 @@ class DevCall:
     @staticmethod
     def get_attributes(dev_id, attr_name):
         try:
-            with ClusterRpcProxy(url) as rpc:
-                MyLog.logger.info('查询服务名称')
-                dev_svr_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
-                msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
+            MyLog.logger.info('查询服务名称')
+            dev_svr_name = DevCall.query_srv_name_by_dev_id(dev_id)
+            msg = MyLog.color_green('设备(%s)的服务名为%s'%(dev_id, dev_svr_name))
+            MyLog.logger.info(msg)
+            if dev_svr_name:
+                msg = MyLog.color_green('RPC调用设备(%s)获取属性值(%s)'%(dev_id, attr_name))
                 MyLog.logger.info(msg)
-                if dev_svr_name:
-                    msg = MyLog.color_green('RPC调用设备(%s)获取属性值(%s)'%(dev_id, attr_name))
-                    MyLog.logger.info(msg)
-                    function_name = 'rpc.' + dev_svr_name +'.property_read'
+                function_name = 'rpc.' + dev_svr_name +'.property_read'
+                with ClusterRpcProxy(url) as rpc:
                     result, value = eval(function_name)(dev_id, attr_name)
-                    if result == g_retValue.qjBoxOpcodeSucess.value:
-                        msg = MyLog.color_green(f'RPC调用设备({dev_id})获取属性值({attr_name}:{value})')
-                        MyLog.logger.info(msg)
-                        return value
-                    else:
-                        msg = MyLog.color_red('获取设备(%s)属性值(%s)返回错误(%s)'%(dev_id, attr_name, g_retValue(result).name))
-                        MyLog.logger.error(msg)
-                        return None
+                if result == g_retValue.qjBoxOpcodeSucess.value:
+                    msg = MyLog.color_green(f'RPC调用设备({dev_id})获取属性值({attr_name}:{value})')
+                    MyLog.logger.info(msg)
+                    return value
+                else:
+                    msg = MyLog.color_red('获取设备(%s)属性值(%s)返回错误(%s)'%(dev_id, attr_name, g_retValue(result).name))
+                    MyLog.logger.error(msg)
+                    return None
         except Exception as e:
             msg = MyLog.color_red("get_attributes has except: " + str(e))
             MyLog.logger.error(msg)
@@ -141,26 +141,27 @@ class DevCall:
     @staticmethod
     def call_service(dev_id, service_name, type, params=None, default=False):
         try:
-            with ClusterRpcProxy(url) as rpc:
-                dev_svr_name = DevCall.query_srv_name_by_dev_id(dev_id)
-                if dev_svr_name:
-                    command_save = True
-                    if type == 'linkage':
-                        command_save = False
-                    if not default:
-                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),参数:%s'%(dev_id, service_name, type, params))
-                        MyLog.logger.info(msg)
-                        function_name = 'rpc.' + dev_svr_name + '.ioctl'
+            dev_svr_name = DevCall.query_srv_name_by_dev_id(dev_id)
+            if dev_svr_name:
+                command_save = True
+                if type == 'linkage':
+                    command_save = False
+                if not default:
+                    msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),参数:%s'%(dev_id, service_name, type, params))
+                    MyLog.logger.info(msg)
+                    function_name = 'rpc.' + dev_svr_name + '.ioctl'
+                    with ClusterRpcProxy(url) as rpc:
                         ret, data = eval(function_name)(dev_id, service_name, command_save, params)
                         return False, True, ret, data
-                    else:
-                        msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),默认参数'%(dev_id, service_name, type))
-                        MyLog.logger.info(msg)
-                        function_name = 'rpc.' + dev_svr_name + '.set_default'
+                else:
+                    msg = MyLog.color_green('RPC调用设备(%s)服务(%s)类型(%s),默认参数'%(dev_id, service_name, type))
+                    MyLog.logger.info(msg)
+                    function_name = 'rpc.' + dev_svr_name + '.set_default'
+                    with ClusterRpcProxy(url) as rpc:
                         ret, data = eval(function_name)(dev_id, service_name, command_save)
                         return False, True, ret, data
-                else:
-                    return False, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
+            else:
+                return False, False, g_retValue.qjBoxOpcodeSrvNoRunning.value, {}
         except UnknownService as e:
             msg = MyLog.color_red("DevCall call_service has UnknownService except: " + str(e))
             MyLog.logger.error(msg)
@@ -186,15 +187,21 @@ class DevCall:
 
     @staticmethod
     def query_srv_name_by_dev_id(dev_id):
-        if dev_id in g_dev_id_to_srv_name_map_dict.keys():
-            dev_srv_name = g_dev_id_to_srv_name_map_dict[dev_id]
-            msg = MyLog.color_green('从内存获取到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
-            MyLog.logger.info(msg)
-            return dev_srv_name
-        else:
-            MyLog.logger.info(f'RPC查询设备({dev_id})服务名称')
-            dev_srv_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
-            msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
-            MyLog.logger.info(msg)
-            g_dev_id_to_srv_name_map_dict[dev_id] = dev_srv_name
-            return dev_srv_name
+        try:
+            if dev_id in g_dev_id_to_srv_name_map_dict.keys():
+                dev_srv_name = g_dev_id_to_srv_name_map_dict[dev_id]
+                msg = MyLog.color_green('从内存获取到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
+                MyLog.logger.info(msg)
+                return dev_srv_name
+            else:
+                MyLog.logger.info(f'RPC查询设备({dev_id})服务名称')
+                with ClusterRpcProxy(url) as rpc:
+                    dev_srv_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
+                msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
+                MyLog.logger.info(msg)
+                g_dev_id_to_srv_name_map_dict[dev_id] = dev_srv_name
+                return dev_srv_name
+        except Exception as e:
+            msg = MyLog.color_red("query_srv_name_by_dev_id has except: " + str(e))
+            MyLog.logger.error(msg)
+            return None

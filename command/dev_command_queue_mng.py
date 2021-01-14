@@ -46,10 +46,11 @@ class DevCommandQueueMng:
     '''
     @staticmethod
     def command_exe(dev_id, command:CommandInfo, focus = False):
-        lk = DevCommandQueueMng.get_exe_locker(dev_id)
-        lk.acquire()
-        MyLog.logger.info('指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
         try:
+            lk = DevCommandQueueMng.get_exe_locker(dev_id)
+            MyLog.logger.info('等待获取锁, 指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
+            lk.acquire()
+            MyLog.logger.info('获得锁, 指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
             #先获取指令名称
             command_name = command.command
             #从该设备的指令队列中查询该指令名称正在执行的指令
@@ -100,8 +101,9 @@ class DevCommandQueueMng:
                         EventReport.report_rule_command_cover_event(dev_id, command.command, running_command.uuid, command.uuid)
             lk.release()
             return need_retry, service_has_recv, result
-        except Exception as e:
-            lk.release()
+        except BaseException as e:
+            if lk.locked():
+                lk.release()
             msg = MyLog.color_red('command_exe has except: ' + str(e))
             MyLog.logger.error(msg)
             return False, False, g_retValue.qjBoxOpcodeExcept.value
