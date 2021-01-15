@@ -58,7 +58,7 @@ class RuleMng:
                 importlib.reload(file)
                 #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param': , 'time': 10}]}]
                 #event_list = event_list = [{"event_id":"", "src_dev_list":[{"productId":"p_id", "deviceId":"d_id"}]}]
-                dev_command_list, event_list = file.script_fun()
+                dev_command_list, event_list, attr_list = file.script_fun()
                 ts = time.time()
                 for dev_command in dev_command_list:
                     command_info_list = []
@@ -504,9 +504,9 @@ class RuleMng:
             return g_retValue.qjBoxOpcodeExcept.value
 
     @classmethod
-    def run_linkage_rule_by_devid(cls, dev_id)->None:
+    def run_linkage_rule_by_devid(cls, dev_id, attrs)->None:
         try:
-            MyLog.logger.info(f'##########run_linkage_rule_by_devid({dev_id})############')
+            MyLog.logger.info(f'##########run_linkage_rule_by_devid({dev_id} attrs: {attrs})############')
             uuid_list = SqliteInterface.get_current_linkage_rule_by_src_devid(dev_id)
             msg = f"get_current_linkage_rule_by_src_devid({dev_id}, sizeof uuid_list = {len(uuid_list)})"
             MyLog.logger.debug(msg)
@@ -523,10 +523,15 @@ class RuleMng:
                 importlib.reload(file)
                 MyLog.logger.debug('run script fun')
                 #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
-                dev_command_list, event_list = file.script_fun()
+                dev_command_list, event_list, attr_list = file.script_fun()
                 msg = f'dev_command_list size: {len(dev_command_list)}, event_list size: {len(event_list)}'
                 MyLog.logger.debug(msg)
-                if dev_command_list or event_list:
+                if attrs:
+                    allow_exe = RuleMng.attrs_has_one_in_changed(dev_id, attr_list, attrs)
+                else:
+                    allow_exe = True
+                MyLog.logger.debug(f'allow exe: {allow_exe}')
+                if allow_exe and (dev_command_list or event_list):
                     priority = SqliteInterface.get_priority_by_uuid(uuid)
                     if priority < 0:
                         continue
@@ -599,7 +604,7 @@ class RuleMng:
                 file = importlib.import_module(uuid)
                 importlib.reload(file)
                 #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', 'time':10 }]}]
-                dev_command_list, event_list = file.script_fun()
+                dev_command_list, event_list, attr_list = file.script_fun()
                 MyLog.logger.debug('dev_command_list size: %d'%(len(dev_command_list)))
                 if dev_command_list or event_list:
                     current_ts = time.time()
@@ -664,7 +669,7 @@ class RuleMng:
                 file = importlib.import_module(py_file_name)
                 importlib.reload(file)
                 #dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', "time":10}]}]
-                dev_command_list, event_list = file.script_fun()
+                dev_command_list, event_list, attr_list = file.script_fun()
                 if dev_command_list:
                     current_ts = time.time()
                     for dev_command in dev_command_list:
@@ -776,3 +781,62 @@ class RuleMng:
             g_rule_timer.cancel()
         g_rule_timer = Timer(ts, RuleMng.timer_rule_decision)
         g_rule_timer.start()
+
+    '''
+    #判断规则的指定设备的属性条件列表中是否有某个属性在设备服务上报的属性变化中
+    #在change_attrs中查找attrs里面的属性，attrs有任何一个属性在
+    #change_attrs中能够找到即返回True，否则返回False
+    dev_id: 设备ID
+    attr_list: ["productId.devId.properties.bri"]
+    change_attrs: {"attr1":1, "attr2":"2"}
+    '''
+    @classmethod
+    def attrs_has_one_in_changed(cls, dev_id:str, attr_list:list, change_attrs:dict):
+        for attr_str in attr_list:
+            key_list = attr_str.split(".")
+            if key_list[2] == "properties" and key_list[1] == dev_id:
+                attr_dict = change_attrs
+                find = True
+                if len(key_list) < 4:
+                    find = False
+                else:
+                    MyLog.logger.debug(f"key_list: {key_list}")
+                    for attr_index in range(3, len(key_list)):
+                        attr_name = key_list[attr_index]
+                        MyLog.logger.debug(f"attr_index: {attr_name}")
+                        name, index = RuleMng.get_array_name_and_index(attr_name)
+                        MyLog.logger.debug(f"name:{name}, index:{index}")
+                        if index:
+                            if name in attr_dict.keys() and type(attr_dict[name] == 'list'):
+                                attr_dict = attr_dict[name][index]
+                            else:
+                                find = False
+                                break
+                        else:
+                            MyLog.logger.debug(f"name: {attr_name}")
+                            MyLog.logger.debug(f"attr_dict: {attr_dict}")
+                            if attr_name in attr_dict.keys():
+                                attr_dict = attr_dict[attr_name]
+                            else:
+                                find = False
+                                break
+                if find:
+                    return True
+        return False
+
+    '''
+    如果表示为数组，获取数组下表值.非数组返回None
+    p2[2]得到2
+    '''
+    @classmethod
+    def get_array_name_and_index(cls, string):
+        try:
+            if string[len(string) - 1] == ']':
+                start_index = string.find('[')
+                return string[0 : start_index], int(string[start_index+1 : len(string) - 1])
+            else:
+                return None, None
+        except Exception as e:
+            msg = MyLog.color_red("get_array_name_and_index has except: " + str(e))
+            MyLog.logger.error(msg)
+            return None, None

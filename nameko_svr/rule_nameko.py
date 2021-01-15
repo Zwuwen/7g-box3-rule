@@ -360,19 +360,19 @@ class RuleService:
         MyLog.logger.info(msg)
         if EventHandle.update_event(product_id, dev_id, event, payload):
             #根据dev_id，触发与其相关的联动脚本执行
-            timer = Timer(0, RuleMng.run_linkage_rule_by_devid, [dev_id])
+            timer = Timer(0, RuleMng.run_linkage_rule_by_devid, args=(dev_id, None, ))
             timer.start()
 
     '''
     属性改变通知
     '''
     @rpc
-    def attribute_notice(self, product_id, dev_id)->None:
+    def attribute_notice(self, product_id, dev_id, attrs)->None:
         if not service_ready():
             return None
         msg = MyLog.color_green('rpc call attribute_notice, dev_id:%s'%(dev_id))
         MyLog.logger.debug(msg)
-        timer = Timer(0, RuleMng.run_linkage_rule_by_devid, [dev_id])
+        timer = Timer(0, RuleMng.run_linkage_rule_by_devid, args=(dev_id, attrs, ))
         timer.start()
 
     '''

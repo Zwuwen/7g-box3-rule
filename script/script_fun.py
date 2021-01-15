@@ -16,12 +16,13 @@ from log.log import MyLog
 productId.devId.events.traffic.type
 productId.devId.properties.bri
 '''
-def get_value(payload):
+def get_value(attr_list:list, payload):
     MyLog.logger.info('script_fun get_value')
     try:
         key_list = payload.split(".")
         if key_list[2] == 'properties':
             value = get_attribute_value(key_list)
+            attr_list.append(payload)
             return value
         elif key_list[2] == 'events':
             value = EventHandle.get_event_value(key_list[0], key_list[1], key_list[3], key_list)
