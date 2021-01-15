@@ -46,7 +46,7 @@ class EventHandle:
             key = product_id + '.' + dev_id + '.' + event
             r = RedisHandle()
             payload_byte_list = r.hmget_value(key, 'payload')
-            if payload_byte_list[0] != None:
+            if payload_byte_list[0]:
                 payload = ''.join([k.decode('utf-8') for k in payload_byte_list])
                 return payload
             else:
