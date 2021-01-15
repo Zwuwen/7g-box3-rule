@@ -5,16 +5,17 @@ __author__ = 'wanghaiquan'
 提供添加，删除接口
 使用一个定时器定时处理到期的规则，上报规则结束事件
 '''
-from threading import Timer, Lock
+from threading import Timer
 import time
 from rpc_call.client import EventReport
 from command.dev_command_queue_mng import DevCommandQueueMng
 from log.log import MyLog
+from locker.redis_locker import RedisLock
 
 #记录正在执行的规则uuid:结束时间戳字典列表 [{"uuid":"", "end_ts":12345}]
 g_running_rule_endtime_list = []
 g_running_rule_endtime_handle_timer = None
-g_lk = Lock()
+g_lk = RedisLock("rule_end_mng")
 
 
 def running_rule_endtime_handle():

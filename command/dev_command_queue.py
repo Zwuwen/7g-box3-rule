@@ -7,7 +7,7 @@ cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
 sys.path.append(pre_dir)
-from threading import Lock
+from locker.redis_locker import RedisLock
 from command.command_info import CommandInfo
 from log.log import MyLog
 
@@ -18,7 +18,7 @@ class DevCommandQueue:
         self.__dev_id = dev_id
         #每个指令一个子队列[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
         self.__queues = []
-        self.__lock = Lock()
+        self.__lock = RedisLock(f"DevCommandQueue_{dev_id}")
 
     @property
     def dev_id(self)->str:

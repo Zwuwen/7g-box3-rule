@@ -2,7 +2,7 @@ __date__ = '2020/10/29'
 __author__ = 'wanghaiquan'
 import os
 import sys
-from threading import Timer, Lock
+from threading import Timer
 import time
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
@@ -13,6 +13,7 @@ from rpc_call.client import EventReport, DevCall
 from common.ret_value import g_retValue
 from command.command_info import CommandInfo
 from log.log import MyLog
+from locker.redis_locker import RedisLock
 '''
 [{"dev_id":'', "dev_command_queue":DevCommandQueue, "timer": threading.timer}]
 1. 设备id
@@ -21,7 +22,7 @@ from log.log import MyLog
 '''
 g_dev_command_queue_list = []
 g_dev_exe_locker_dict = {}
-g_exe_locker_dict_locker = Lock()
+g_exe_locker_dict_locker = RedisLock("DevCommandQueueMng")
 
 class DevCommandQueueMng:
     '''获取指定设备的指令执行锁
@@ -35,7 +36,7 @@ class DevCommandQueueMng:
             g_exe_locker_dict_locker.release()
             return lk
         else:
-            g_dev_exe_locker_dict[dev_id] = Lock()
+            g_dev_exe_locker_dict[dev_id] = RedisLock(f"dev_exe_{dev_id}")
             lk = g_dev_exe_locker_dict[dev_id]
             g_exe_locker_dict_locker.release()
             return lk
