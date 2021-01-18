@@ -181,13 +181,10 @@ class DevCommandQueueMng:
             dict["dev_command_queue"] = dev_command_queue
             g_dev_command_queue_list.append(dict)
 
-        highest_priority_command_list = dev_command_queue.get_highest_priority_command_list()
         for command in command_list:
-            for highest_priority_command in highest_priority_command_list:
-                if command.command == highest_priority_command.command:
-                    if command.priority <= highest_priority_command.priority:
-                        EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
-                    break
+            current_running_command = dev_command_queue.get_current_running_command()
+            if command.priority <= current_running_command.priority:
+                EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
 
         dev_command_queue.add_timer_command_list(command_list)
 
@@ -211,16 +208,13 @@ class DevCommandQueueMng:
                     dict["dev_command_queue"] = dev_command_queue
                     g_dev_command_queue_list.append(dict)
 
-                highest_priority_command_list = dev_command_queue.get_highest_priority_command_list()
                 for command in command_list:
                     need_exe = True
-                    for highest_priority_command in highest_priority_command_list:
-                        if command.command == highest_priority_command.command:
-                            MyLog.logger.info('command.command = %s, command.priority = %d, highest_priority_command.priority = %d'%(command.command, command.priority, highest_priority_command.priority))
-                            if command.priority <= highest_priority_command.priority:
-                                EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
-                                need_exe = False
-                            break
+                    current_running_command = dev_command_queue.get_current_running_command()
+                    MyLog.logger.info('command.command = %s, command.priority = %d, current_running_command.priority = %d'%(command.command, command.priority, current_running_command.priority))
+                    if command.priority <= current_running_command.priority:
+                        EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
+                        need_exe = False
 
                     if need_exe:
                         need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command)
@@ -258,18 +252,15 @@ class DevCommandQueueMng:
             dict["dev_command_queue"] = dev_command_queue
             g_dev_command_queue_list.append(dict)
 
-        highest_priority_command_list = dev_command_queue.get_highest_priority_command_list()
         for command in command_list:
             command.uuid = 'manual'
             need_exe = True
-            for highest_priority_command in highest_priority_command_list:
-                if command.command == highest_priority_command.command:
-                    # 同一优先级的临时手动命令需要更新执行
-                    if (highest_priority_command.type == 'manual' and command.priority < highest_priority_command.priority) or \
-                       (highest_priority_command.type != 'manual' and command.priority <= highest_priority_command.priority):
-                        EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, highest_priority_command.uuid)
-                        need_exe = False
-                    break
+            current_running_command = dev_command_queue.get_current_running_command()
+            # 同一优先级的临时手动命令需要更新执行
+            if (current_running_command.type == 'manual' and command.priority < current_running_command.priority) or \
+                (current_running_command.type != 'manual' and command.priority <= current_running_command.priority):
+                EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
+                need_exe = False
 
             if need_exe:
                 need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, focus = True)
