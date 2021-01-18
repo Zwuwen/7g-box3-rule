@@ -41,11 +41,11 @@ class DevCommandQueue:
                     #判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
-                    for c in queue['command_queue']:
-                        if c.uuid == command.uuid:
+                    for i in range(len(queue['command_queue'])):
+                        if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
                             #更新
-                            c = command
+                            queue['command_queue'][i] = command
                             MyLog.logger.info(f"更新定时指令({command.command})")
                             break
 
@@ -75,11 +75,11 @@ class DevCommandQueue:
                     #判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
-                    for c in queue['command_queue']:
-                        if c.uuid == command.uuid:
+                    for i in range(len(queue['command_queue'])):
+                        if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
                             #更新
-                            c = command
+                            queue['command_queue'][i] = command
                             break
 
                     if not uuid_has_exist:
@@ -107,11 +107,11 @@ class DevCommandQueue:
                     #判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
-                    for c in queue['command_queue']:
-                        if c.uuid == command.uuid:
+                    for i in range(len(queue['command_queue'])):
+                        if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
                             #更新
-                            c = command
+                            queue['command_queue'][i].uuid = command
                             break
 
                     if not uuid_has_exist:
