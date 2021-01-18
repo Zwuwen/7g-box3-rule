@@ -182,7 +182,7 @@ class DevCommandQueueMng:
             g_dev_command_queue_list.append(dict)
 
         for command in command_list:
-            current_running_command = dev_command_queue.get_current_running_command()
+            current_running_command = dev_command_queue.get_current_running_command(command.command)
             if command.priority <= current_running_command.priority:
                 EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
 
@@ -210,7 +210,7 @@ class DevCommandQueueMng:
 
                 for command in command_list:
                     need_exe = True
-                    current_running_command = dev_command_queue.get_current_running_command()
+                    current_running_command = dev_command_queue.get_current_running_command(command.command)
                     MyLog.logger.info('command.command = %s, command.priority = %d, current_running_command.priority = %d'%(command.command, command.priority, current_running_command.priority))
                     if command.priority <= current_running_command.priority:
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
@@ -255,7 +255,7 @@ class DevCommandQueueMng:
         for command in command_list:
             command.uuid = 'manual'
             need_exe = True
-            current_running_command = dev_command_queue.get_current_running_command()
+            current_running_command = dev_command_queue.get_current_running_command(command.command)
             # 同一优先级的临时手动命令需要更新执行
             if (current_running_command.type == 'manual' and command.priority < current_running_command.priority) or \
                 (current_running_command.type != 'manual' and command.priority <= current_running_command.priority):
