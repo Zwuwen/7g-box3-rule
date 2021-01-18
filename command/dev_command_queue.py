@@ -111,7 +111,7 @@ class DevCommandQueue:
                         if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
                             #更新
-                            queue['command_queue'][i].uuid = command
+                            queue['command_queue'][i] = command
                             break
 
                     if not uuid_has_exist:
