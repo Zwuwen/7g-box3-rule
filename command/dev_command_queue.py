@@ -131,9 +131,9 @@ class DevCommandQueue:
     def set_current_running_command(self, command_name, command)->None:
         self.__lock.acquire()
         is_command_exist = False
-        for queue in self.__queues:
-            if queue['command_name'] == command_name:
-                queue['current_command'] = command
+        for i in range(len(self.__queues)):
+            if self.__queues[i]['command_name'] == command_name:
+                self.__queues[i]['current_command'] = command
                 is_command_exist = True
                 break
         if not is_command_exist:
@@ -186,8 +186,10 @@ class DevCommandQueue:
     def get_highest_priority_command_by_command_name(self, command_name)->CommandInfo:
         ts = time.time()
         MyLog.logger.info("get_highest_priority_command_by_command_name: %s"%(command_name))
-        for queue in self.__queues:
+        #for queue in self.__queues:
+        for i in range(len(self.__queues)):
             highest_command:CommandInfo = None
+            queue = self.__queues[i]
             if 'command_name' in queue and queue['command_name'] == command_name:
                 command_queue:list = queue["command_queue"]
                 if command_queue:
@@ -217,7 +219,9 @@ class DevCommandQueue:
         self.__lock.acquire()
         ts = time.time()
         nearest_ts = 2236761304
-        for queue in self.__queues:
+
+        for i in range(len(self.__queues)):
+            queue = self.__queues[i]
             if 'command_queue' in queue:
                 command_queue:list = queue["command_queue"]
                 for command in command_queue:
@@ -239,7 +243,8 @@ class DevCommandQueue:
     def clear_command_by_rule_uuid(self, uuid_list)->None:
         self.__lock.acquire()
         for uuid in uuid_list:
-            for queue in self.__queues:
+            for i in range(len(self.__queues)):
+                queue = self.__queues[i]
                 command_queue:list = queue['command_queue']
                 for command in command_queue:
                     if command.uuid == uuid:
@@ -250,14 +255,14 @@ class DevCommandQueue:
     def clear_all_command(self)->None:
         self.__lock.acquire()
         for queue in self.__queues:
-            command_queue:list = queue['command_queue']
-            command_queue.clear()
+            queue['command_queue'].clear()
         self.__lock.release()
 
     #删除指定服务的手动指令
     def clear_manual_command(self, command_name)->None:
         self.__lock.acquire()
-        for queue in self.__queues:
+        for i in range(len(self.__queues)):
+            queue = self.__queues[i]
             if queue['command_name'] == command_name:
                 command_queue:list = queue['command_queue']
                 for command in command_queue:
@@ -269,7 +274,8 @@ class DevCommandQueue:
     #删除指定指令名称队列中的联动规则的指令
     def clear_linkage_command(self, command_name)->None:
         self.__lock.acquire()
-        for queue in self.__queues:
+        for i in range(len(self.__queues)):
+            queue = self.__queues[i]
             if queue['command_name'] == command_name:
                 command_queue:list = queue['command_queue']
                 for command in command_queue:

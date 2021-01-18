@@ -55,17 +55,17 @@ def running_rule_endtime_handle():
 '''uuid_end_ts_list = [{"uuid":"", "end_ts":12345}]'''
 def add_running_rule_endtime(uuid_end_ts_list):
     g_lk.acquire()
-    for add in uuid_end_ts_list:
+    for i in range(len(uuid_end_ts_list)):
         is_new = True
-        for l in g_running_rule_endtime_list:
-            if add['uuid'] == l['uuid']:
-                l['end_ts'] = add['end_ts']
+        for j in range(len(g_running_rule_endtime_list)):
+            if uuid_end_ts_list[i]['uuid'] == g_running_rule_endtime_list[j]['uuid']:
+                g_running_rule_endtime_list[j]['end_ts'] = uuid_end_ts_list[i]['end_ts']
                 is_new = False
                 break
         if is_new:
             new = {}
-            new['uuid'] = add['uuid']
-            new['end_ts'] = add['end_ts']
+            new['uuid'] = uuid_end_ts_list[i]['uuid']
+            new['end_ts'] = uuid_end_ts_list[i]['end_ts']
             g_running_rule_endtime_list.append(new)
     g_lk.release()
     global g_running_rule_endtime_handle_timer

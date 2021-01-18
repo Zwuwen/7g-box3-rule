@@ -279,8 +279,8 @@ class DevCommandQueueMng:
     @staticmethod
     def clear_command_by_rule_uuid(uuid_list)->None:
         tmp_list = list(set(uuid_list))
-        for dev_command_queue_obj in g_dev_command_queue_list:
-            dev_command_queue:DevCommandQueue = dev_command_queue_obj['dev_command_queue']
+        for i in range(len(g_dev_command_queue_list)):
+            dev_command_queue:DevCommandQueue = g_dev_command_queue_list[i]['dev_command_queue']
             dev_command_queue.clear_command_by_rule_uuid(tmp_list)
 
     '''清除指定设备指定服务的手动控制指令'''
@@ -293,8 +293,8 @@ class DevCommandQueueMng:
     '''清空所有规则'''
     @staticmethod
     def clear_all_command()->None:
-        for dev_command_queue_obj in g_dev_command_queue_list:
-            dev_command_queue:DevCommandQueue = dev_command_queue_obj['dev_command_queue']
+        for i in range(len(g_dev_command_queue_list)):
+            dev_command_queue:DevCommandQueue = g_dev_command_queue_list[i]['dev_command_queue']
             dev_command_queue.clear_all_command()
         DevCommandQueueMng.all_dev_exe()
 
@@ -321,9 +321,9 @@ class DevCommandQueueMng:
     '''更新指定设备的定时器'''
     @staticmethod
     def update_dev_timer(dev_id, timer:Timer)->None:
-        for d in g_dev_command_queue_list:
-            if dev_id == d['dev_id']:
-                if 'timer' in d:
-                    tm:Timer = d['timer']
+        for i in range(len(g_dev_command_queue_list)):
+            if dev_id == g_dev_command_queue_list[i]['dev_id']:
+                if 'timer' in g_dev_command_queue_list[i]:
+                    tm:Timer = g_dev_command_queue_list[i]['timer']
                     tm.cancel()
-                d['timer'] = timer
+                g_dev_command_queue_list[i]['timer'] = timer
