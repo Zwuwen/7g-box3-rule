@@ -48,11 +48,7 @@ class DevCommandQueueMng:
     @staticmethod
     def command_exe(dev_id, command:CommandInfo, force = False):
         try:
-            lk = DevCommandQueueMng.get_exe_locker(dev_id)
-            ts = time.time()
-            MyLog.logger.info(f'等待获取锁({ts}), 指令执行 设备id:{dev_id}, 指令名称:{command.command}, 规则:{command.uuid}, force:{force}')
-            lk.acquire()
-            MyLog.logger.info(f'获得锁({ts}), 指令执行 设备id:{dev_id}, 指令名称:{command.command}, 规则:{command.uuid},  force:{force}')
+            MyLog.logger.info(f'指令执行 设备id:{dev_id}, 指令名称:{command.command}, 规则:{command.uuid}, force:{force}')
             #先获取指令名称
             command_name = command.command
             #从该设备的指令队列中查询该指令名称正在执行的指令
@@ -101,11 +97,8 @@ class DevCommandQueueMng:
                     dev_command_queue.set_current_running_command(command_name, command)
                     if need_report_rule_command_cover_event:
                         EventReport.report_rule_command_cover_event(dev_id, command.command, running_command.uuid, command.uuid)
-            lk.release()
             return need_retry, service_has_recv, result
         except BaseException as e:
-            if lk.locked():
-                lk.release()
             msg = MyLog.color_red('command_exe has except: ' + str(e))
             MyLog.logger.error(msg)
             return False, False, g_retValue.qjBoxOpcodeExcept.value
@@ -115,6 +108,12 @@ class DevCommandQueueMng:
     @staticmethod
     def dev_exe(dev_id)->None:
         MyLog.logger.info('设备(%s)所有指令执行决策'%(dev_id))
+        lk = DevCommandQueueMng.get_exe_locker(dev_id)
+        ts = time.time()
+        MyLog.logger.info(f'设备执行, 等待获取锁({ts}), 设备id:{dev_id}')
+        lk.acquire()
+        MyLog.logger.info(f'设备执行, 获得锁({ts}), 设备id:{dev_id}')
+
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         need_run_command_list = dev_command_queue.get_highest_priority_command_list()
         MyLog.logger.info('设备(%s) need_run_command_list size:%d'%(dev_id, len(need_run_command_list)))
@@ -128,6 +127,8 @@ class DevCommandQueueMng:
                     dev_command_queue.clear_linkage_command(run_command.command)
             elif need_retry:
                 is_need_retry = True
+        lk.release()
+        MyLog.logger.info(f'设备执行, 释放锁({ts}), 设备id:{dev_id}')
         #如果所有指令执行成功，那么重置定时器为所有指令中下一次最近的时间，如果有失败，那就定时60秒后重试。
         if not is_need_retry:
             DevCommandQueueMng.__reset_dev_timer(dev_id)
@@ -199,7 +200,12 @@ class DevCommandQueueMng:
     @staticmethod
     def add_linkage_command(product_id, dev_id, command_list)->None:
         def add_linkage_command_body(product_id, dev_id, command_list):
+            lk = DevCommandQueueMng.get_exe_locker(dev_id)
             try:
+                ts = time.time()
+                MyLog.logger.info(f'添加联动指令, 等待获取锁({ts}), 设备id:{dev_id}')
+                lk.acquire()
+                MyLog.logger.info(f'添加联动指令, 获得锁({ts}), 设备id:{dev_id}')
                 need_add_to_command_queue_list = []
                 dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
                 if not dev_command_queue:
@@ -229,9 +235,12 @@ class DevCommandQueueMng:
                     dev_command_queue.add_linkage_command_list(need_add_to_command_queue_list)
                     name_list = dev_command_queue.get_all_command_name_list()
                     DevCommandQueueMng.__reset_dev_timer(dev_id)
+                lk.release()
+                MyLog.logger.info(f'添加联动指令, 释放锁({ts}), 设备id:{dev_id}')
             except Exception as e:
                 msg = MyLog.color_red('add_linkage_command_body has exception: ' + str(e))
                 MyLog.logger.error(msg)
+                lk.release()
 
         timer = Timer(0, add_linkage_command_body, args=(product_id, dev_id, command_list,))
         timer.start()
@@ -245,6 +254,12 @@ class DevCommandQueueMng:
     '''
     @staticmethod
     def add_manual_command(product_id, dev_id, command_list)->None:
+        lk = DevCommandQueueMng.get_exe_locker(dev_id)
+        ts = time.time()
+        MyLog.logger.info(f'添加手动指令, 等待获取锁({ts}), 设备id:{dev_id}')
+        lk.acquire()
+        MyLog.logger.info(f'添加手动指令, 获得锁({ts}), 设备id:{dev_id}')
+
         need_add_to_command_queue_list = []
         dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
         if not dev_command_queue:
@@ -275,6 +290,8 @@ class DevCommandQueueMng:
         if need_add_to_command_queue_list:
             dev_command_queue.add_manual_command_list(need_add_to_command_queue_list)
             DevCommandQueueMng.__reset_dev_timer(dev_id)
+        lk.release()
+        MyLog.logger.info(f'添加手动指令, 释放锁({ts}), 设备id:{dev_id}')
 
     '''清空指定规则uuid的所有指令'''
     @staticmethod
