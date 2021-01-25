@@ -31,12 +31,12 @@ class RuleMng:
     def timer_rule_decision(cls)->None:
         try:
             MyLog.logger.info('进行定时规则决策')
-            #获取符合要求的uuid列表
-            uuid_list = SqliteInterface.get_current_timer_rule()
             #计算出下一次最近的执行时间戳,启动定时器
             next_decision_time = cls.get_closest_timestamp()
             if next_decision_time > 0.0:
                 RuleMng.start_new_rule_decision_timer(next_decision_time)
+            #获取符合要求的uuid列表
+            uuid_list = SqliteInterface.get_current_timer_rule()
             #执行规则，将规则指令下发给指令管理器
             MyLog.logger.info('uuid_list size: ' + str(len(uuid_list)))
             dev_id_list = []
@@ -851,8 +851,6 @@ class RuleMng:
     def __check_rule_param(cls, rule_dict)->bool:
         # 'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate',
         # 'time', "time.startTime", "time.endTime", 'dstDevice', 'script'
-        t = type(rule_dict["enable"])
-        print(f"type of enable: {t}")
         if type(rule_dict["enable"]) != bool:
             msg = MyLog.color_red("type of enable is not boolean")
             MyLog.logger.error(msg)
