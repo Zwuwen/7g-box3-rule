@@ -6,7 +6,7 @@ def read_file(filepath):
     return content
 
 def write_file(content, filepath):
-    with open(filepath, 'w+') as fp:
+    with open(filepath, 'w+', encoding='utf-8') as fp:
         fp.write(content)
 
 def conver_to_py(str, py_path):
