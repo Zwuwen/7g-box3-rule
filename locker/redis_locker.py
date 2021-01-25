@@ -21,7 +21,7 @@ class RedisLock():
                 self._lock = self.rdcon.setnx(self._lock_key, timestamp)
                 if self._lock == 1 or (time.time() > float(self.rdcon.get(self._lock_key)) and time.time() > float(self.rdcon.getset(self._lock_key, timestamp))):
                     break
-            time.sleep(0.3)
+            time.sleep(0.05)
  
     def release(self):
         self.rdcon.delete(self._lock_key)
