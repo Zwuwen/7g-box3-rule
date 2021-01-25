@@ -42,16 +42,17 @@ class DevCommandQueueMng:
             return lk
 
     ''' 指令执行
-        focus 是否强制指令执行
+        force 是否强制指令执行
         成功返回True，失败返回False
     '''
     @staticmethod
-    def command_exe(dev_id, command:CommandInfo, focus = False):
+    def command_exe(dev_id, command:CommandInfo, force = False):
         try:
             lk = DevCommandQueueMng.get_exe_locker(dev_id)
-            MyLog.logger.info('等待获取锁, 指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
+            ts = time.time()
+            MyLog.logger.info(f'等待获取锁({ts}), 指令执行 设备id:{dev_id}, 指令名称:{command.command}, 规则:{command.uuid}, force:{force}')
             lk.acquire()
-            MyLog.logger.info('获得锁, 指令执行 设备id:%s, 指令名称:%s, 规则:%s'%(dev_id, command.command, command.uuid))
+            MyLog.logger.info(f'获得锁({ts}), 指令执行 设备id:{dev_id}, 指令名称:{command.command}, 规则:{command.uuid},  force:{force}')
             #先获取指令名称
             command_name = command.command
             #从该设备的指令队列中查询该指令名称正在执行的指令
@@ -59,7 +60,7 @@ class DevCommandQueueMng:
             running_command = dev_command_queue.get_current_running_command(command_name)
             need_exe = False
             need_report_rule_command_cover_event = False
-            if focus:
+            if force:
                 need_exe = True
             elif running_command:
                 #判断是否为同一个规则指令，如果不是才允许执行
@@ -265,7 +266,7 @@ class DevCommandQueueMng:
                 need_exe = False
 
             if need_exe:
-                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, focus = True)
+                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, force = True)
                 if service_has_recv:
                     # 如果执行临时手动指令，则联动指令已被顶替失效，删除
                     dev_command_queue.clear_linkage_command(command.command)
