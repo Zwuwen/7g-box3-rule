@@ -475,6 +475,11 @@ class RuleMng:
     @classmethod
     def enable_rule(cls, uuids):
         try:
+            for uuid in uuids:
+                if not SqliteInterface.rule_exist(uuid):
+                    msg = MyLog.color_red("rule(%s) has not exist"%(uuid))
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
             #更新数据库
             SqliteInterface.set_rule_enable(uuids)
             #规则决策
@@ -493,6 +498,11 @@ class RuleMng:
     @classmethod
     def disable_rule(cls, uuids)->int:
         try:
+            for uuid in uuids:
+                if not SqliteInterface.rule_exist(uuid):
+                    msg = MyLog.color_red("rule(%s) has not exist"%(uuid))
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
             #数据库删除规则
             SqliteInterface.set_rule_disable(uuids)
 
