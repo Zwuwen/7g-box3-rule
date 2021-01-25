@@ -851,7 +851,9 @@ class RuleMng:
     def __check_rule_param(cls, rule_dict)->bool:
         # 'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate',
         # 'time', "time.startTime", "time.endTime", 'dstDevice', 'script'
-        if type(rule_dict["enable"] != bool):
+        t = type(rule_dict["enable"])
+        print(f"type of enable: {t}")
+        if type(rule_dict["enable"]) != bool:
             msg = MyLog.color_red("type of enable is not boolean")
             MyLog.logger.error(msg)
             return False
