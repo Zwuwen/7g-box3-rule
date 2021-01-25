@@ -177,15 +177,15 @@ class RuleMng:
                     MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
-                if not cls.__check_rule_param(rule_dict):
-                    #返回参数错误
-                    msg = MyLog.color_red('check_rule_param failed')
-                    MyLog.logger.error(msg)
-                    return g_retValue.qjBoxOpcodeInputParamErr.value
-
                 if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
                     #返回参数错误
                     msg = MyLog.color_red("param error, srcDevice not exist")
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                if not cls.__check_rule_param(rule_dict):
+                    #返回参数错误
+                    msg = MyLog.color_red('check_rule_param failed')
                     MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
