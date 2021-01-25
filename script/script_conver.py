@@ -14,6 +14,7 @@ def conver_to_py(str, py_path):
     str = str.replace("#ref(", "get_value(attr_list, ")
     str = str.replace("#call_service", "call_service")
     str = str.replace("#raise_event", "raise_event")
+    str = str.replace(" || ", "  || ")
     py_str = jiphy.to.python(str)
 
     line_list = py_str.split("\n")
