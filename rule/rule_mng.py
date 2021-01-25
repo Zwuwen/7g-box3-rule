@@ -276,8 +276,8 @@ class RuleMng:
 
                     for time in get_rule_dict['time_list']:
                         time_dict = {}
-                        time_dict['starttime'] = time['start_time']
-                        time_dict['endtime'] = time['end_time']
+                        time_dict['startTime'] = time['start_time']
+                        time_dict['endTime'] = time['end_time']
                         rule_dict['time'].append(time_dict)
 
                     for dev in get_rule_dict['src_dev_list']:
