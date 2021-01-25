@@ -587,6 +587,13 @@ class RuleMng:
     @classmethod
     def stop_linkage_rule_running(cls, uuids)->int:
         try:
+            for uuid in uuids:
+                rule_type = SqliteInterface.get_type_by_uuid(uuid)
+                if not rule_type or rule_type != 'linkage':
+                    msg = MyLog.color_red("stop_linkage_rule_running the type of input uuid is invalid")
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
             DevCommandQueueMng.clear_command_by_rule_uuid(uuids)
             remove_running_rule_endtime(uuids)
             DevCommandQueueMng.all_dev_exe()

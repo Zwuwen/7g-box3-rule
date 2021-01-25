@@ -212,6 +212,18 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return -1
 
+    #获取指定规则的类型
+    def get_type_by_uuid(self, uuid)->str:
+        try:
+            main_sql = self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).all()
+            for info in main_sql:
+                return info.type
+            return None
+        except Exception as e:
+            msg = MyLog.color_red("get_type_by_uuid has except: " + str(e))
+            MyLog.logger.error(msg)
+            return None
+
     #筛选出当前时间点可以执行的定时规则，筛选条件：规则enable并且当前的日期时间在规则时间内
     def get_current_timer_rule(self):
         uuid_list = []
