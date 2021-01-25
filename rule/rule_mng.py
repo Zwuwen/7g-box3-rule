@@ -475,6 +475,10 @@ class RuleMng:
     @classmethod
     def enable_rule(cls, uuids):
         try:
+            if not uuids:
+                msg = MyLog.color_red("uuids is empty")
+                MyLog.logger.error(msg)
+                return g_retValue.qjBoxOpcodeInputParamErr.value
             for uuid in uuids:
                 if not SqliteInterface.rule_exist(uuid):
                     msg = MyLog.color_red("rule(%s) has not exist"%(uuid))
@@ -498,6 +502,10 @@ class RuleMng:
     @classmethod
     def disable_rule(cls, uuids)->int:
         try:
+            if not uuids:
+                msg = MyLog.color_red("uuids is empty")
+                MyLog.logger.error(msg)
+                return g_retValue.qjBoxOpcodeInputParamErr.value
             for uuid in uuids:
                 if not SqliteInterface.rule_exist(uuid):
                     msg = MyLog.color_red("rule(%s) has not exist"%(uuid))
