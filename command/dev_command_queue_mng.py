@@ -254,44 +254,53 @@ class DevCommandQueueMng:
     '''
     @staticmethod
     def add_manual_command(product_id, dev_id, command_list)->None:
-        lk = DevCommandQueueMng.get_exe_locker(dev_id)
-        ts = time.time()
-        MyLog.logger.info(f'添加手动指令, 等待获取锁({ts}), 设备id:{dev_id}')
-        lk.acquire()
-        MyLog.logger.info(f'添加手动指令, 获得锁({ts}), 设备id:{dev_id}')
+        def add_manual_command_body(product_id, dev_id, command_list):
+            lk = DevCommandQueueMng.get_exe_locker(dev_id)
+            try:
+                ts = time.time()
+                MyLog.logger.info(f'添加手动指令, 等待获取锁({ts}), 设备id:{dev_id}')
+                lk.acquire()
+                MyLog.logger.info(f'添加手动指令, 获得锁({ts}), 设备id:{dev_id}')
 
-        need_add_to_command_queue_list = []
-        dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
-        if not dev_command_queue:
-            dict = {}
-            dict["dev_id"] = dev_id
-            dev_command_queue = DevCommandQueue(product_id, dev_id)
-            dict["dev_command_queue"] = dev_command_queue
-            g_dev_command_queue_list.append(dict)
+                need_add_to_command_queue_list = []
+                dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
+                if not dev_command_queue:
+                    dict = {}
+                    dict["dev_id"] = dev_id
+                    dev_command_queue = DevCommandQueue(product_id, dev_id)
+                    dict["dev_command_queue"] = dev_command_queue
+                    g_dev_command_queue_list.append(dict)
 
-        for command in command_list:
-            command.uuid = 'manual'
-            need_exe = True
-            current_running_command = dev_command_queue.get_current_running_command(command.command)
-            # 同一优先级的临时手动命令需要更新执行
-            if current_running_command and \
-                ((current_running_command.type == 'manual' and command.priority < current_running_command.priority) or \
-                (current_running_command.type != 'manual' and command.priority <= current_running_command.priority)):
-                EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
-                need_exe = False
+                for command in command_list:
+                    command.uuid = 'manual'
+                    need_exe = True
+                    current_running_command = dev_command_queue.get_current_running_command(command.command)
+                    # 同一优先级的临时手动命令需要更新执行
+                    if current_running_command and \
+                        ((current_running_command.type == 'manual' and command.priority < current_running_command.priority) or \
+                        (current_running_command.type != 'manual' and command.priority <= current_running_command.priority)):
+                        EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
+                        need_exe = False
 
-            if need_exe:
-                need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, force = True)
-                if service_has_recv:
-                    # 如果执行临时手动指令，则联动指令已被顶替失效，删除
-                    dev_command_queue.clear_linkage_command(command.command)
+                    if need_exe:
+                        need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, command, force = True)
+                        if service_has_recv:
+                            # 如果执行临时手动指令，则联动指令已被顶替失效，删除
+                            dev_command_queue.clear_linkage_command(command.command)
 
-            need_add_to_command_queue_list.append(command)
-        if need_add_to_command_queue_list:
-            dev_command_queue.add_manual_command_list(need_add_to_command_queue_list)
-            DevCommandQueueMng.__reset_dev_timer(dev_id)
-        lk.release()
-        MyLog.logger.info(f'添加手动指令, 释放锁({ts}), 设备id:{dev_id}')
+                    need_add_to_command_queue_list.append(command)
+                if need_add_to_command_queue_list:
+                    dev_command_queue.add_manual_command_list(need_add_to_command_queue_list)
+                    DevCommandQueueMng.__reset_dev_timer(dev_id)
+                lk.release()
+                MyLog.logger.info(f'添加手动指令, 释放锁({ts}), 设备id:{dev_id}')
+            except Exception as e:
+                msg = MyLog.color_red('add_manual_command_body has exception: ' + str(e))
+                MyLog.logger.error(msg)
+                lk.release()
+
+        timer = Timer(0, add_manual_command_body, args=(product_id, dev_id, command_list,))
+        timer.start()
 
     '''清空指定规则uuid的所有指令'''
     @staticmethod
