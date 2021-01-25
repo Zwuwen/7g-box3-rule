@@ -177,6 +177,12 @@ class RuleMng:
                     MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
+                if not cls.__check_rule_param(rule_dict):
+                    #返回参数错误
+                    msg = MyLog.color_red('check_rule_param failed')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
                 if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
                     #返回参数错误
                     msg = MyLog.color_red("param error, srcDevice not exist")
@@ -840,3 +846,29 @@ class RuleMng:
             msg = MyLog.color_red("get_array_name_and_index has except: " + str(e))
             MyLog.logger.error(msg)
             return None, None
+
+    @classmethod
+    def __check_rule_param(cls, rule_dict)->bool:
+        # 'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate',
+        # 'time', "time.startTime", "time.endTime", 'dstDevice', 'script'
+        if type(rule_dict["enable"] != bool):
+            msg = MyLog.color_red("type of enable is not boolean")
+            MyLog.logger.error(msg)
+            return False
+
+        if type(rule_dict["priority"]) != int or rule_dict["priority"] < 0 or rule_dict["priority"] > 99:
+            msg = MyLog.color_red("priority param is invalid")
+            MyLog.logger.error(msg)
+            return False
+
+        if rule_dict["type"] == "linkage" and not rule_dict["srcDevice"]:
+            msg = MyLog.color_red("linkage rule, srcDevice is empty")
+            MyLog.logger.error(msg)
+            return False
+
+        if not rule_dict["dstDevice"]:
+            msg = MyLog.color_red("dstDevice is empty")
+            MyLog.logger.error(msg)
+            return False
+
+        return True
