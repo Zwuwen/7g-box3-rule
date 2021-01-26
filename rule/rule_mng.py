@@ -600,7 +600,24 @@ class RuleMng:
                     #返回参数错误
                     msg = MyLog.color_red('必要参数不存在')
                     MyLog.logger.error(msg)
-                    continue
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                if type(service_dict['uuid']) != str or service_dict['uuid'] == '':
+                    msg = MyLog.color_red('uuid param is invalid')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                if type(service_dict['script']) != str or service_dict['script'] == '':
+                    msg = MyLog.color_red('script param is invalid')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                if type(service_dict['priority']) != int or service_dict['priority'] < 1 or service_dict['priority'] > 99:
+                    msg = MyLog.color_red('priority param is invalid')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+            for service_dict in services:
                 uuid = service_dict['uuid']
                 py_path = "/tmp/" + uuid + '.py'
                 pyc_path = "/tmp/" + uuid + '.pyc'
