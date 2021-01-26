@@ -90,7 +90,7 @@ class RuleService:
     @rpc
     def add_rule(self, rules)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(rules)
         msg = MyLog.color_green('rpc call add_rule: %s'%(payload))
         MyLog.logger.info(msg)
@@ -128,7 +128,7 @@ class RuleService:
     @rpc
     def update_rule(self, rules)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(rules)
         msg = MyLog.color_green('rpc call update_rule: %s'%(payload))
         MyLog.logger.info(msg)
@@ -175,7 +175,7 @@ class RuleService:
     @rpc
     def get_rule_by_uuid(self, uuids)->(int, dict):
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value, {}
+            return g_retValue.qjBoxOpcodeNoReady.value, {}
         payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call get_rule_by_uuid: %s'%(payload))
         MyLog.logger.info(msg)
@@ -217,7 +217,7 @@ class RuleService:
     @rpc
     def get_all_rules(self)->(int, dict):
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value, {}
+            return g_retValue.qjBoxOpcodeNoReady.value, {}
         msg = MyLog.color_green('rpc call get_all_rules')
         MyLog.logger.info(msg)
         return RuleMng.get_all_rules()
@@ -230,7 +230,7 @@ class RuleService:
     @rpc
     def delete_rule_by_uuid(self, uuids)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call delete_rule_by_uuid: %s'%(payload))
         MyLog.logger.info(msg)
@@ -241,7 +241,7 @@ class RuleService:
     @rpc
     def clear_all_rule(self)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         msg = MyLog.color_green('rpc call clear_all_rule')
         MyLog.logger.info(msg)
         return RuleMng.clear_all_rule()
@@ -254,7 +254,7 @@ class RuleService:
     @rpc
     def enable_rule(self, uuids)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call enable_rule: %s'%(payload))
         MyLog.logger.info(msg)
@@ -268,7 +268,7 @@ class RuleService:
     @rpc
     def disable_rule(self, uuids)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call disable_rule: %s'%(payload))
         MyLog.logger.info(msg)
@@ -282,7 +282,7 @@ class RuleService:
     @rpc
     def stop_linkage_rule_running(self, uuids)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(uuids)
         msg = MyLog.color_green('rpc call stop_linkage_rule_running: %s'%(payload))
         MyLog.logger.info(msg)
@@ -301,7 +301,7 @@ class RuleService:
     @rpc
     def outside_linkage(self, services)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(services)
         msg = MyLog.color_green('rpc call outside_linkage: %s'%(payload))
         MyLog.logger.info(msg)
@@ -319,7 +319,7 @@ class RuleService:
     @rpc
     def manual_control(self, services)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(services)
         msg = MyLog.color_green('rpc call manual_control: %s'%(payload))
         MyLog.logger.info(msg)
@@ -337,7 +337,7 @@ class RuleService:
     @rpc
     def stop_manual_control(self, services)->int:
         if not service_ready():
-            return g_retValue.qjBoxOpcodeSucess.value
+            return g_retValue.qjBoxOpcodeNoReady.value
         payload = json.dumps(services)
         msg = MyLog.color_green('rpc call stop_manual_control: %s'%(payload))
         MyLog.logger.info(msg)
