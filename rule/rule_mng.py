@@ -161,34 +161,21 @@ class RuleMng:
     @classmethod
     def add_rule(cls, rules)->int:
         try:
-            keys = {'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate', 'time', "time.startTime", "time.endTime",
-             'dstDevice', 'script'}
-
             for rule_dict in rules:
+                ret = cls.__check_rule_param(rule_dict)
+                if ret != g_retValue.qjBoxOpcodeSucess.value:
+                    msg = MyLog.color_red('check_rule_param failed')
+                    MyLog.logger.error(msg)
+                    return ret
+
                 if SqliteInterface.rule_exist(rule_dict['uuid']):
                     msg = MyLog.color_red("rule(%s) has exist"%(rule_dict['uuid']))
                     MyLog.logger.error(msg)
                     return g_retValue.qjBoxOpcodeInputParamErr.value
 
+
+
             for rule_dict in rules:
-                if not cls.__check_keys_exists(rule_dict, keys):
-                    #返回参数错误
-                    msg = MyLog.color_red('key param not exist')
-                    MyLog.logger.error(msg)
-                    return g_retValue.qjBoxOpcodeInputParamErr.value
-
-                if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
-                    #返回参数错误
-                    msg = MyLog.color_red("param error, srcDevice not exist")
-                    MyLog.logger.error(msg)
-                    return g_retValue.qjBoxOpcodeInputParamErr.value
-
-                if not cls.__check_rule_param(rule_dict):
-                    #返回参数错误
-                    msg = MyLog.color_red('check_rule_param failed')
-                    MyLog.logger.error(msg)
-                    return g_retValue.qjBoxOpcodeInputParamErr.value
-
                 if not os.path.exists(RULE_JS_SCRIPT_FOLDER):
                     os.makedirs(RULE_JS_SCRIPT_FOLDER)
                 if not os.path.exists(RULE_PY_SCRIPT_FOLDER):
@@ -402,22 +389,13 @@ class RuleMng:
     @classmethod
     def update_rule(cls, rules)->int:
         try:
-            keys = {'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate', 'time', "time.startTime", "time.endTime",
-             'dstDevice', 'script'}
-
             uuid_list = []
             for rule_dict in rules:
-                if not cls.__check_keys_exists(rule_dict, keys):
-                    #返回参数错误
-                    msg = MyLog.color_red('必要参数不存在')
+                ret = cls.__check_rule_param(rule_dict)
+                if ret != g_retValue.qjBoxOpcodeSucess.value:
+                    msg = MyLog.color_red('check_rule_param failed')
                     MyLog.logger.error(msg)
-                    continue
-
-                if rule_dict['type'] != 'timer' and 'srcDevice' not in rule_dict:
-                    #返回参数错误
-                    msg = MyLog.color_red('必要参数不存在')
-                    MyLog.logger.error(msg)
-                    continue
+                    return ret
 
                 uuid_list.append(rule_dict['uuid'])
             #数据库删除规则
@@ -891,27 +869,60 @@ class RuleMng:
             return None, None
 
     @classmethod
-    def __check_rule_param(cls, rule_dict)->bool:
-        # 'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate',
-        # 'time', "time.startTime", "time.endTime", 'dstDevice', 'script'
-        if type(rule_dict["enable"]) != bool:
-            msg = MyLog.color_red("type of enable is not boolean")
-            MyLog.logger.error(msg)
-            return False
+    def __check_rule_param(cls, rule_dict)->int:
+        keys = {'uuid', 'enable', 'type', 'priority', 'date', 'date.startDate', 'date.endDate', 'time', "time.startTime", "time.endTime",
+            'srcDevice', 'dstDevice', 'script'}
 
-        if type(rule_dict["priority"]) != int or rule_dict["priority"] < 0 or rule_dict["priority"] > 99:
+        if 'date' not in rule_dict.keys() or type(rule_dict['date']) != list or len(rule_dict['date']) == 0:
+            msg = MyLog.color_red('date param invalid')
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if 'time' not in rule_dict.keys() or type(rule_dict['time']) != list or len(rule_dict['time']) == 0:
+            msg = MyLog.color_red('time param invalid')
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if not cls.__check_keys_exists(rule_dict, keys):
+            #返回参数错误
+            msg = MyLog.color_red('key param not exist')
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        #判断数据类型和值
+        if type(rule_dict['uuid']) != str or rule_dict['uuid'] == '':
+            msg = MyLog.color_red('rule uuid param is invalid')
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if type(rule_dict["enable"]) != bool:
+            msg = MyLog.color_red("rule enable is not boolean")
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if type(rule_dict["type"]) != str or (rule_dict["type"] != "timer" and rule_dict["type"] == "linkage"):
+            msg = MyLog.color_red("rule type is invalid")
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if type(rule_dict["priority"]) != int or rule_dict["priority"] < 1 or rule_dict["priority"] > 99:
             msg = MyLog.color_red("priority param is invalid")
             MyLog.logger.error(msg)
-            return False
+            return g_retValue.qjBoxOpcodeInputParamErr.value
+
+        if type(rule_dict['script']) != str or rule_dict['script'] == '':
+            msg = MyLog.color_red('rule script param is invalid')
+            MyLog.logger.error(msg)
+            return g_retValue.qjBoxOpcodeInputParamErr.value
 
         if rule_dict["type"] == "linkage" and not rule_dict["srcDevice"]:
             msg = MyLog.color_red("linkage rule, srcDevice is empty")
             MyLog.logger.error(msg)
-            return False
+            return g_retValue.qjBoxOpcodeInputParamErr.value
 
         if not rule_dict["dstDevice"]:
             msg = MyLog.color_red("dstDevice is empty")
             MyLog.logger.error(msg)
-            return False
+            return g_retValue.qjBoxOpcodeInputParamErr.value
 
-        return True
+        return g_retValue.qjBoxOpcodeSucess.value
