@@ -735,13 +735,31 @@ class RuleMng:
     def stop_manual_control(cls, services)->int:
         try:
             keys = {'productId', 'devId', 'service'}
-            dev_id_list = []
             for service_dict in services:
                 if not cls.__check_keys_exists(service_dict, keys):
-                    #返回参数错误
+                    #字段不存在
                     msg = MyLog.color_red('必要参数不存在')
                     MyLog.logger.error(msg)
-                    continue
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                pid = service_dict['productId']
+                did = service_dict['devId']
+                srv = service_dict['service']
+
+                if type(pid) != str or type(did) != str or type(srv) != str:
+                    #数据类型错误
+                    msg = MyLog.color_red('参数数据类型错误')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+                if pid == "" or did == "" or srv == "":
+                    #数据值为空
+                    msg = MyLog.color_red('参数字符串数据为空字符串')
+                    MyLog.logger.error(msg)
+                    return g_retValue.qjBoxOpcodeInputParamErr.value
+
+            dev_id_list = []
+            for service_dict in services:
                 DevCommandQueueMng.clear_manual_command(service_dict['productId'], service_dict['devId'], service_dict['service'])
                 dev_id_list.append(service_dict['devId'])
             DevCommandQueueMng.dev_list_exe(dev_id_list)
