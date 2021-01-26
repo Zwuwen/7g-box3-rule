@@ -928,7 +928,7 @@ class RuleMng:
             MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeInputParamErr.value
 
-        if type(rule_dict["type"]) != str or (rule_dict["type"] != "timer" and rule_dict["type"] == "linkage"):
+        if type(rule_dict["type"]) != str or (rule_dict["type"] != "timer" and rule_dict["type"] != "linkage"):
             msg = MyLog.color_red("rule type is invalid")
             MyLog.logger.error(msg)
             return g_retValue.qjBoxOpcodeInputParamErr.value
