@@ -383,3 +383,10 @@ class RuleService:
         if not service_ready():
             return None
         MyLog.set_level(level)
+
+    '''
+    查询规则引擎就绪状态
+    '''
+    @rpc
+    def rule_engine_ready(self)->bool:
+        return service_ready()
