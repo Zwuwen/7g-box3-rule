@@ -4,7 +4,7 @@ __author__ = 'wanghaiquan'
 #指令信息实体类
 class CommandInfo:
     #规则uuid，指令名称，指令参数，开始时间戳，结束时间戳，优先级，类型("timer","linkage", "manual")，是否为默认参数
-    def __init__(self, uuid=None, command=None, params=None, start_ts=0, end_ts=0, priority=0, type='', default_param=False):
+    def __init__(self, uuid=None, command=None, params=None, start_ts=0, end_ts=0, priority=0, type='', default_param=False, effective=True):
         self.__default_param = default_param
         if self.__default_param:
             self.__uuid = 'default'
@@ -16,6 +16,7 @@ class CommandInfo:
         self.__end_ts = end_ts
         self.__priority = priority
         self.__type = type
+        self.__effective = effective
 
 
     @property
@@ -82,7 +83,13 @@ class CommandInfo:
     def type(self, type):
         self.__type = type
 
+    @property
+    def effective(self):
+        return self.__effective
 
+    @effective.setter
+    def effective(self, effective):
+        self.__effective = effective
 
 
 

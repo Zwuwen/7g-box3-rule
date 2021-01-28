@@ -61,12 +61,12 @@ class DevCommandQueueMng:
             elif running_command:
                 #判断是否为同一个规则指令，如果不是才允许执行
                 MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
-                if running_command.uuid != command.uuid:
+                if not running_command.effective or running_command.uuid != command.uuid:
                     need_exe = True
                 else:
                     msg = MyLog.color_green('指令执行 设备id:%s, 指令名称:%s, 规则:%s 已经在执行中，不需要重新下发'%(dev_id, command.command, command.uuid))
                     MyLog.logger.info(msg)
-                if running_command.priority < command.priority:
+                if not running_command.effective or running_command.priority < command.priority:
                     need_report_rule_command_cover_event = True
             else:
                 need_exe = True
@@ -228,7 +228,7 @@ class DevCommandQueueMng:
 
         for command in command_list:
             current_running_command = dev_command_queue.get_current_running_command(command.command)
-            if current_running_command and command.priority <= current_running_command.priority:
+            if current_running_command and current_running_command.effective and command.priority <= current_running_command.priority:
                 EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
 
         dev_command_queue.add_timer_command_list(command_list)
@@ -263,7 +263,7 @@ class DevCommandQueueMng:
                     current_running_command = dev_command_queue.get_current_running_command(command.command)
                     if current_running_command:
                         MyLog.logger.info('command.command = %s, command.priority = %d, current_running_command.priority = %d'%(command.command, command.priority, current_running_command.priority))
-                    if current_running_command and command.priority <= current_running_command.priority:
+                    if current_running_command and current_running_command.effective and command.priority <= current_running_command.priority:
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
                         need_exe = False
 
@@ -319,7 +319,7 @@ class DevCommandQueueMng:
                     need_exe = True
                     current_running_command = dev_command_queue.get_current_running_command(command.command)
                     # 同一优先级的临时手动命令需要更新执行
-                    if current_running_command and \
+                    if current_running_command and current_running_command.effective and \
                         ((current_running_command.type == 'manual' and command.priority < current_running_command.priority) or \
                         (current_running_command.type != 'manual' and command.priority <= current_running_command.priority)):
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)

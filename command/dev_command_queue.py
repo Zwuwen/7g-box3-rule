@@ -249,6 +249,9 @@ class DevCommandQueue:
                 for command in command_queue:
                     if command.uuid == uuid:
                         command_queue.remove(command)
+                        if queue['current_command'].uuid == uuid:
+                            # 该指令已经被从指令队列中删除，如果该指令是正在执行的指令，那需要将该指令设置成无效状态
+                            queue['current_command'].effective = False
         self.__lock.release()
 
     #清空所有指令
@@ -268,6 +271,9 @@ class DevCommandQueue:
                 for command in command_queue:
                     if command.type == 'manual':
                         command_queue.remove(command)
+                        if queue['current_command'].type == 'manual':
+                            # 该指令已经被从指令队列中删除，如果该指令是正在执行的指令，那需要将该指令设置成无效状态
+                            queue['current_command'].effective = False
                 break
         self.__lock.release()
 
@@ -281,6 +287,9 @@ class DevCommandQueue:
                 for command in command_queue:
                     if command.type == 'linkage':
                         command_queue.remove(command)
+                        if queue['current_command'].type == 'linkage':
+                            # 该指令已经被从指令队列中删除，如果该指令是正在执行的指令，那需要将该指令设置成无效状态
+                            queue['current_command'].effective = False
                 break
         self.__lock.release()
 

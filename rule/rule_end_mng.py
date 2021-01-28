@@ -59,13 +59,13 @@ def add_running_rule_endtime(uuid_end_ts_list):
         is_new = True
         for j in range(len(g_running_rule_endtime_list)):
             if uuid_end_ts_list[i]['uuid'] == g_running_rule_endtime_list[j]['uuid']:
-                g_running_rule_endtime_list[j]['end_ts'] = uuid_end_ts_list[i]['end_ts']
+                g_running_rule_endtime_list[j]['end_ts'] = uuid_end_ts_list[i]['end_ts'] - 0.5
                 is_new = False
                 break
         if is_new:
             new = {}
             new['uuid'] = uuid_end_ts_list[i]['uuid']
-            new['end_ts'] = uuid_end_ts_list[i]['end_ts']
+            new['end_ts'] = uuid_end_ts_list[i]['end_ts'] - 0.5
             g_running_rule_endtime_list.append(new)
     g_lk.release()
     global g_running_rule_endtime_handle_timer
