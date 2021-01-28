@@ -68,12 +68,12 @@ class RuleMng:
                     if command_info_list:
                         DevCommandQueueMng.add_timer_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
                         dev_id_list.append(dev_command['dev_id'])
+                        DevCommandQueueMng.dev_exe_by_command_list(dev_command['dev_id'], command_info_list)
 
                 for custom_event in event_list:
                     EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
                 MyLog.logger.info('===结束执行规则(%s)==='%(uuid))
 
-            DevCommandQueueMng.dev_list_exe(dev_id_list)
             add_running_rule_endtime(rule_endtime_list)
         except Exception as e:
             msg = MyLog.color_red("timer_rule_decision has except: " + str(e))

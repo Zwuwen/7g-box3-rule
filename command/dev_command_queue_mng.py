@@ -135,6 +135,47 @@ class DevCommandQueueMng:
         else:
             DevCommandQueueMng.__reset_dev_timer_by_time(dev_id, 60)
 
+    '''
+    对指定的设备按照command_list的指令顺序进行规则决策并执行
+    '''
+    @staticmethod
+    def dev_exe_by_command_list(dev_id, command_list)->None:
+        def dev_exe_by_command_list_body(dev_id, command_list):
+            MyLog.logger.info('设备(%s)按照指定的指令顺序执行'%(dev_id))
+            lk = DevCommandQueueMng.get_exe_locker(dev_id)
+            try:
+                ts = time.time()
+                MyLog.logger.info(f'设备执行, 等待获取锁({ts}), 设备id:{dev_id}')
+                lk.acquire()
+                MyLog.logger.info(f'设备执行, 获得锁({ts}), 设备id:{dev_id}')
+
+                is_need_retry = False
+                dev_command_queue = DevCommandQueueMng.get_dev_command_queue(dev_id)
+                for command in command_list:
+                    run_command = dev_command_queue.get_highest_priority_command_by_command_name(command.command)
+                    MyLog.logger.info('设备(%s)run command: %s'%(dev_id,run_command.command))
+                    need_retry, service_has_recv, ret = DevCommandQueueMng.command_exe(dev_id, run_command)
+                    if service_has_recv:
+                        # 如果当前最高等级的规则类型不为联动，就要清除该指令队列中存在的类型为联动的指令
+                        if run_command.type != 'linkage':
+                            dev_command_queue.clear_linkage_command(run_command.command)
+                    elif need_retry:
+                        is_need_retry = True
+                lk.release()
+                MyLog.logger.info(f'设备执行, 释放锁({ts}), 设备id:{dev_id}')
+                #如果所有指令执行成功，那么重置定时器为所有指令中下一次最近的时间，如果有失败，那就定时60秒后重试。
+                if not is_need_retry:
+                    DevCommandQueueMng.__reset_dev_timer(dev_id)
+                else:
+                    DevCommandQueueMng.__reset_dev_timer_by_time(dev_id, 60)
+            except Exception as e:
+                msg = MyLog.color_red('dev_exe_by_command_list_body has exception: ' + str(e))
+                MyLog.logger.error(msg)
+                lk.release()
+
+        timer = Timer(0, dev_exe_by_command_list_body, args=(dev_id, command_list,))
+        timer.start()
+
     '''重置设备的指令执行定时器'''
     @staticmethod
     def __reset_dev_timer(dev_id)->None:
@@ -162,14 +203,16 @@ class DevCommandQueueMng:
     @staticmethod
     def all_dev_exe()->None:
         for d in g_dev_command_queue_list:
-            DevCommandQueueMng.dev_exe(d['dev_id'])
+            timer = Timer(0, DevCommandQueueMng.dev_exe, args=(d['dev_id'],))
+            timer.start()
 
     '''对指定的设备列表各自进行一次指令决策执行'''
     @staticmethod
     def dev_list_exe(dev_id_list)->None:
         tmp_list = list(set(dev_id_list))
         for dev_id in tmp_list:
-            DevCommandQueueMng.dev_exe(dev_id)
+            timer = Timer(0, DevCommandQueueMng.dev_exe, args=(dev_id,))
+            timer.start()
 
     '''添加定时规则指令列表'''
     @staticmethod
