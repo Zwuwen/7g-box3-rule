@@ -6,6 +6,7 @@ sys.path.append(cur_dir)
 sys.path.append(pre_dir)
 import time
 import redis
+from redis import WatchError
 #from config import RULE_REDIS_HOST, RULE_REDIS_PORT
 from log.log import MyLog
  
