@@ -263,7 +263,7 @@ class DevCommandQueueMng:
                     current_running_command = dev_command_queue.get_current_running_command(command.command)
                     if current_running_command:
                         MyLog.logger.info('command.command = %s, command.priority = %d, current_running_command.priority = %d'%(command.command, command.priority, current_running_command.priority))
-                    if current_running_command and current_running_command.effective and command.priority <= current_running_command.priority:
+                    if current_running_command and command.priority <= current_running_command.priority:
                         EventReport.report_rule_command_ignore_event(dev_id, command.command, command.uuid, current_running_command.uuid)
                         need_exe = False
 
