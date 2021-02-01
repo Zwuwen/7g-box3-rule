@@ -197,9 +197,13 @@ class DevCall:
                 MyLog.logger.info(f'RPC查询设备({dev_id})服务名称')
                 with ClusterRpcProxy(url) as rpc:
                     dev_srv_name = rpc.mng_srv.get_srv_name_from_sn(dev_id)
-                msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
-                MyLog.logger.info(msg)
-                g_dev_id_to_srv_name_map_dict[dev_id] = dev_srv_name
+                if dev_srv_name:
+                    msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为%s'%(dev_id, dev_srv_name))
+                    MyLog.logger.info(msg)
+                    g_dev_id_to_srv_name_map_dict[dev_id] = dev_srv_name
+                else:
+                    msg = MyLog.color_green('RPC查询得到设备(%s)的服务名为空'%(dev_id))
+                    MyLog.logger.info(msg)
                 return dev_srv_name
         except Exception as e:
             msg = MyLog.color_red("query_srv_name_by_dev_id has except: " + str(e))
