@@ -278,7 +278,7 @@ class RuleMng:
 
                     script_path = get_rule_dict['script_path']
                     if os.path.exists(script_path):
-                        with open(script_path) as fp:
+                        with open(script_path, 'r', encoding='utf-8') as fp:
                             rule_dict['script'] = fp.read()
 
                     rule_list.append(rule_dict)
