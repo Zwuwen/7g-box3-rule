@@ -57,6 +57,11 @@ class SqliteInterface:
     def get_priority_by_uuid(cls, uuid)->int:
         return cls.__sql.get_priority_by_uuid(uuid)
 
+    #获取规则的类型
+    @classmethod
+    def get_type_by_uuid(cls, uuid)->str:
+        return cls.__sql.get_type_by_uuid(uuid)
+
     #根据当前的日期时间获取所有日期时间符合的规则uuid列表
     @classmethod
     def get_current_timer_rule(cls)->list:

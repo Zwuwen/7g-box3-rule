@@ -31,10 +31,13 @@ class EventHandle:
             key = product_id + '.' + dev_id + '.' + event
             r = RedisHandle()
             ts_byte_list = r.hmget_value(key, 'ts')
-            str_ts = ''.join([k.decode('utf-8') for k in ts_byte_list])
-            float_ts = float(str_ts)
-            MyLog.logger.info('get_event_timestamp key(%s) ts float_ts: %f'%(key, float_ts))
-            return float_ts
+            if ts_byte_list[0]:
+                str_ts = ''.join([k.decode('utf-8') for k in ts_byte_list])
+                float_ts = float(str_ts)
+                MyLog.logger.info('get_event_timestamp key(%s) ts float_ts: %f'%(key, float_ts))
+                return float_ts
+            else:
+                return None
         except Exception as e:
             msg = MyLog.color_red("get_event_timestamp has except: " + str(e))
             MyLog.logger.error(msg)
@@ -46,7 +49,7 @@ class EventHandle:
             key = product_id + '.' + dev_id + '.' + event
             r = RedisHandle()
             payload_byte_list = r.hmget_value(key, 'payload')
-            if payload_byte_list[0] != None:
+            if payload_byte_list[0]:
                 payload = ''.join([k.decode('utf-8') for k in payload_byte_list])
                 return payload
             else:

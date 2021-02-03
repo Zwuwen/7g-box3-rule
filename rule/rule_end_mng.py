@@ -10,10 +10,12 @@ import time
 from rpc_call.client import EventReport
 from command.dev_command_queue_mng import DevCommandQueueMng
 from log.log import MyLog
+from locker.redis_locker import RedisLock
 
 #记录正在执行的规则uuid:结束时间戳字典列表 [{"uuid":"", "end_ts":12345}]
 g_running_rule_endtime_list = []
 g_running_rule_endtime_handle_timer = None
+g_lk = RedisLock("rule_end_mng")
 
 
 def running_rule_endtime_handle():
@@ -21,6 +23,7 @@ def running_rule_endtime_handle():
     current_ts = time.time()
     smallest_ts = 0
     uuid_list = []
+    g_lk.acquire()
     for rule in g_running_rule_endtime_list:
         if rule['end_ts'] < current_ts:
             MyLog.logger.info("规则(%s)结束"%(rule['uuid']))
@@ -33,7 +36,7 @@ def running_rule_endtime_handle():
                 smallest_ts = rule['end_ts']
             elif rule['end_ts'] < smallest_ts:
                 smallest_ts = rule['end_ts']
-
+    g_lk.release()
     if uuid_list:
         # 删除结束规则的指令
         DevCommandQueueMng.clear_command_by_rule_uuid(uuid_list)
@@ -51,19 +54,20 @@ def running_rule_endtime_handle():
 
 '''uuid_end_ts_list = [{"uuid":"", "end_ts":12345}]'''
 def add_running_rule_endtime(uuid_end_ts_list):
-    for add in uuid_end_ts_list:
+    g_lk.acquire()
+    for i in range(len(uuid_end_ts_list)):
         is_new = True
-        for l in g_running_rule_endtime_list:
-            if add['uuid'] == l['uuid']:
-                l['end_ts'] = add['end_ts']
+        for j in range(len(g_running_rule_endtime_list)):
+            if uuid_end_ts_list[i]['uuid'] == g_running_rule_endtime_list[j]['uuid']:
+                g_running_rule_endtime_list[j]['end_ts'] = uuid_end_ts_list[i]['end_ts'] - 0.5
                 is_new = False
                 break
         if is_new:
             new = {}
-            new['uuid'] = add['uuid']
-            new['end_ts'] = add['end_ts']
+            new['uuid'] = uuid_end_ts_list[i]['uuid']
+            new['end_ts'] = uuid_end_ts_list[i]['end_ts'] - 0.5
             g_running_rule_endtime_list.append(new)
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
@@ -72,13 +76,14 @@ def add_running_rule_endtime(uuid_end_ts_list):
     g_running_rule_endtime_handle_timer.start()
 
 def remove_running_rule_endtime(uuid_list):
+    g_lk.acquire()
     for uuid in uuid_list:
         for rule in g_running_rule_endtime_list:
             if rule['uuid'] == uuid:
                 g_running_rule_endtime_list.remove(rule)
                 EventReport.report_rule_end_event(rule['uuid'])
                 break
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
@@ -87,11 +92,12 @@ def remove_running_rule_endtime(uuid_list):
     g_running_rule_endtime_handle_timer.start()
 
 def clear_all_running_rule_endtime():
+    g_lk.acquire()
     for rule in g_running_rule_endtime_list:
         g_running_rule_endtime_list.remove(rule)
         EventReport.report_rule_end_event(rule['uuid'])
         break
-
+    g_lk.release()
     global g_running_rule_endtime_handle_timer
     if g_running_rule_endtime_handle_timer:
         g_running_rule_endtime_handle_timer.cancel()
