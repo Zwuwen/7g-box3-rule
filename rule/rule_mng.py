@@ -279,7 +279,7 @@ class RuleMng:
                             rule_dict['script'] = fp.read()
 
                     rule_list.append(rule_dict)
-                    rules["rules"] = rule_list
+            rules["rules"] = rule_list
             return g_retValue.qjBoxOpcodeSucess.value, rules
         except Exception as e:
             return g_retValue.qjBoxOpcodeExcept.value, None
