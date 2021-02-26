@@ -72,7 +72,7 @@ class EventHandle:
                 for key_index in range(4, len(key_list)):
                     key = key_list[key_index]
                     name, index = cls.get_array_name_and_index(key)
-                    if index:
+                    if index != None:
                         event_payload_dict = event_payload_dict[name][index]
                     else:
                         event_payload_dict = event_payload_dict[key]

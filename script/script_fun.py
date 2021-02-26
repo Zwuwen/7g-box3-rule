@@ -111,13 +111,19 @@ def raise_event(event_list, event_id, srcList):
 def get_attribute_value(key_list):
     try:
         dev_id = key_list[1]
-        attr_name = key_list[3]
-        attrs_dict = DevCall.get_attributes(dev_id, attr_name)
+        attr_name_t = key_list[3]
+        name, index = EventHandle.get_array_name_and_index(attr_name_t)
+        if index != None:
+            attrs_dict = DevCall.get_attributes(dev_id, name)
+            if attrs_dict:
+               attrs_dict = attrs_dict[index] 
+        else:
+            attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
         if attrs_dict:
             for key_index in range(4, len(key_list)):
                 key = key_list[key_index]
                 name, index = EventHandle.get_array_name_and_index(key)
-                if index:
+                if index != None:
                     attrs_dict = attrs_dict[name][index]
                 else:
                     attrs_dict = attrs_dict[key]

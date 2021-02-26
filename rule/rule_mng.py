@@ -861,7 +861,7 @@ class RuleMng:
                         MyLog.logger.debug(f"attr_index: {attr_name}")
                         name, index = RuleMng.get_array_name_and_index(attr_name)
                         MyLog.logger.debug(f"name:{name}, index:{index}")
-                        if index:
+                        if index != None:
                             if name in attr_dict.keys() and type(attr_dict[name] == 'list'):
                                 attr_dict = attr_dict[name][index]
                             else:
