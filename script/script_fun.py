@@ -119,7 +119,7 @@ def get_attribute_value(key_list):
                attrs_dict = attrs_dict[index] 
         else:
             attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
-        if attrs_dict:
+        if attrs_dict != None:
             for key_index in range(4, len(key_list)):
                 key = key_list[key_index]
                 name, index = EventHandle.get_array_name_and_index(key)

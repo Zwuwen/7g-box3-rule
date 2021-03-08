@@ -557,6 +557,7 @@ class RuleMng:
 
                     for custom_event in event_list:
                         EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
+            MyLog.logger.info(f'##########run_linkage_rule_by_devid finished({dev_id} attrs: {attrs})############')
         except Exception as e:
             msg = MyLog.color_red('run_linkage_rule_by_devid has except: ' + str(e))
             MyLog.logger.error(msg)
