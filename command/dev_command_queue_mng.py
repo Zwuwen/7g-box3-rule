@@ -58,6 +58,8 @@ class DevCommandQueueMng:
             need_report_rule_command_cover_event = False
             if force:
                 need_exe = True
+                if running_command.priority < command.priority:
+                    need_report_rule_command_cover_event = True
             elif running_command:
                 #判断是否为同一个规则指令，如果不是才允许执行
                 MyLog.logger.info('running_command: %s, command:%s'%(running_command.uuid, command.uuid))
