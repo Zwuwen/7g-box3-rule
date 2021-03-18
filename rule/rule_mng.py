@@ -47,12 +47,15 @@ class RuleMng:
                 if priority < 0:
                     continue
                 py_model = RULE_PY_MODEL_PATH + uuid
-                EventReport.report_rule_start_event(uuid)
-                #记录规则结束时间戳到全局变量g_running_rule，等待结束上报结束事件
-                start_ts, end_ts = cls.get_rule_timestamp(uuid)
-                MyLog.logger.info('规则(%s)结束时间戳:%d'%(uuid, end_ts))
-                if end_ts > 0:
-                    rule_endtime_list.append({'uuid': uuid, "end_ts": end_ts})
+                #如果已经添加到了g_running_rule_endtime_list里，说明这个定时策略早就开始执行了
+                if not find_running_rule_by_uuid(uuid):
+                    EventReport.report_rule_start_event(uuid)
+
+                    #记录规则结束时间戳到全局变量g_running_rule，等待结束上报结束事件
+                    start_ts, end_ts = cls.get_rule_timestamp(uuid)
+                    MyLog.logger.info('规则(%s)结束时间戳:%d'%(uuid, end_ts))
+                    if end_ts > 0:
+                        rule_endtime_list.append({'uuid': uuid, "end_ts": end_ts})
                 #执行脚本
                 file = importlib.import_module(py_model)
                 importlib.reload(file)
@@ -66,12 +69,16 @@ class RuleMng:
                         command_info = CommandInfo(uuid, command['service'], command['param'], ts, ts + command['time'], priority, 'timer')
                         command_info_list.append(command_info)
                     if command_info_list:
-                        DevCommandQueueMng.add_timer_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
-                        dev_id_list.append(dev_command['dev_id'])
+                        # 如果已经添加到了g_running_rule_endtime_list里，说明联动事件已经添加到命令队列里了
+                        if not find_running_rule_by_uuid(uuid):
+                            DevCommandQueueMng.add_timer_command(dev_command['product_id'], dev_command['dev_id'], command_info_list)
+                        # dev_id_list.append(dev_command['dev_id'])
                         DevCommandQueueMng.dev_exe_by_command_list(dev_command['dev_id'], command_info_list)
 
-                for custom_event in event_list:
-                    EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
+                #如果已经添加到了g_running_rule_endtime_list里，说明联动事件已经上报过了
+                if not find_running_rule_by_uuid(uuid):
+                    for custom_event in event_list:
+                        EventReport.report_linkage_custom_event(custom_event['event_id'], custom_event['src_dev_list'])
                 MyLog.logger.info('===结束执行规则(%s)==='%(uuid))
 
             add_running_rule_endtime(rule_endtime_list)

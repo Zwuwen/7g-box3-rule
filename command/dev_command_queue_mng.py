@@ -14,6 +14,7 @@ from common.ret_value import g_retValue
 from command.command_info import CommandInfo
 from log.log import MyLog
 from locker.redis_locker import RedisLock
+
 '''
 [{"dev_id":'', "dev_command_queue":DevCommandQueue, "timer": threading.timer}]
 1. 设备id

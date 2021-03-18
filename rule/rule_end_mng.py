@@ -104,3 +104,10 @@ def clear_all_running_rule_endtime():
 
     g_running_rule_endtime_handle_timer = Timer(0, running_rule_endtime_handle)
     g_running_rule_endtime_handle_timer.start()
+
+
+def find_running_rule_by_uuid(rule_uuid):
+    MyLog.logger.info(f'🔎find_running_rule_by_uuid({rule_uuid})')
+    ret = rule_uuid in [uuid_dic['uuid'] for uuid_dic in g_running_rule_endtime_list]
+    MyLog.logger.info(f'🔎find_running_rule_by_uuid:{ret}')
+    return ret
