@@ -1,7 +1,9 @@
 import os
 import sys
 import time
-#from sqlalchemy import exc
+
+# from sqlalchemy import exc
+
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
@@ -11,12 +13,15 @@ from command.dev_command_queue_mng import DevCommandQueueMng
 from rule.event_handle import EventHandle
 from rpc_call.client import DevCall
 from log.log import MyLog
+from rule.dev_attribute_mng import DevAttributeMng
 
 '''
 productId.devId.events.traffic.type
 productId.devId.properties.bri
 '''
-def get_value(attr_list:list, payload):
+
+
+def get_value(attr_list: list, payload):
     MyLog.logger.info('script_fun get_value')
     try:
         key_list = payload.split(".")
@@ -34,10 +39,13 @@ def get_value(attr_list:list, payload):
         MyLog.logger.error(msg)
         return None
 
+
 '''productId.devId.events.traffic'''
+
+
 def get_event_time_from_now(payload):
     try:
-        MyLog.logger.info("get_event_time_from_now payload: %s"%(payload))
+        MyLog.logger.info("get_event_time_from_now payload: %s" % (payload))
         key_list = payload.split(".")
         if key_list[2] != 'events':
             msg = MyLog.color_red("payload error")
@@ -48,12 +56,13 @@ def get_event_time_from_now(payload):
             return 2592000
         current_ts = time.time()
         t = current_ts - ts
-        MyLog.logger.info('get_event_time_from_now: %f'%(t))
+        MyLog.logger.info('get_event_time_from_now: %f' % (t))
         return t
     except Exception as e:
         msg = MyLog.color_red('get_event_time_from_now has except: ' + str(e))
         MyLog.logger.error(msg)
         return 2592000
+
 
 def get_command_list_by_dev_id(dev_command_list, dev_id):
     for dev_command in dev_command_list:
@@ -61,10 +70,13 @@ def get_command_list_by_dev_id(dev_command_list, dev_id):
             return dev_command['command_list']
     return None
 
+
 ''' service:   "productId.devId.services.service"
     dev_command_list = [{'product_id': '', 'dev_id': "", "command_list":[{'service':'', 'param':'', "time":10}]}]
 '''
-def call_service(dev_command_list, service, duration, **param)->None:
+
+
+def call_service(dev_command_list, service, duration, **param) -> None:
     try:
         key_list = service.split(".")
         product_id = key_list[0]
@@ -97,6 +109,8 @@ def call_service(dev_command_list, service, duration, **param)->None:
 '''
     event_list = [{"event_id":"", "src_dev_list":[{"productId":"p_id", "deviceId":"d_id"}]}]
 '''
+
+
 def raise_event(event_list, event_id, srcList):
     try:
         event_dict = {}
@@ -108,25 +122,61 @@ def raise_event(event_list, event_id, srcList):
         msg = MyLog.color_red('raise_event has except: ' + str(e))
         MyLog.logger.error(msg)
 
+
+# def get_attribute_value(key_list):
+#     try:
+#         dev_id = key_list[1]
+#         attr_name_t = key_list[3]
+#         name, index = EventHandle.get_array_name_and_index(attr_name_t)
+#         if index != None:
+#             attrs_dict = DevCall.get_attributes(dev_id, name)
+#             if attrs_dict:
+#                attrs_dict = attrs_dict[index]
+#         else:
+#             attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
+#         if attrs_dict != None:
+#             for key_index in range(4, len(key_list)):
+#                 key = key_list[key_index]
+#                 name, index = EventHandle.get_array_name_and_index(key)
+#                 if index != None:
+#                     attrs_dict = attrs_dict[name][index]
+#                 else:
+#                     attrs_dict = attrs_dict[key]
+#             return attrs_dict
+#         else:
+#             return None
+#     except Exception as e:
+#         msg = MyLog.color_red('get_attribute_value has except: ' + str(e))
+#         MyLog.logger.error(msg)
+#         return None
 def get_attribute_value(key_list):
     try:
         dev_id = key_list[1]
         attr_name_t = key_list[3]
+
         name, index = EventHandle.get_array_name_and_index(attr_name_t)
-        if index != None:
-            attrs_dict = DevCall.get_attributes(dev_id, name)
+        MyLog.logger.info(f'attrs_dict in DevAttributeMng:{DevAttributeMng.dev_now_attributes}')
+        if index is not None:
+            attrs_dict = DevAttributeMng.get_dev_attr_item(dev_id=dev_id, attr_name=name)
+            if not attrs_dict:
+                attrs_dict = DevCall.get_attributes(dev_id, name)
             if attrs_dict:
-               attrs_dict = attrs_dict[index] 
+                attrs_dict = attrs_dict[index]
         else:
-            attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
-        if attrs_dict != None:
+            attrs_dict = DevAttributeMng.get_dev_attr_item(dev_id=dev_id, attr_name=attr_name_t)
+            if not attrs_dict:
+                attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
+
+        if attrs_dict is not None:
+            MyLog.logger.debug(f'key_list:{key_list}')
             for key_index in range(4, len(key_list)):
                 key = key_list[key_index]
                 name, index = EventHandle.get_array_name_and_index(key)
-                if index != None:
+                if index is not None:
                     attrs_dict = attrs_dict[name][index]
                 else:
                     attrs_dict = attrs_dict[key]
+            MyLog.logger.debug(f'attrs_dict:{attrs_dict}')
             return attrs_dict
         else:
             return None

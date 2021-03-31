@@ -1,6 +1,8 @@
 import time
 import os
 import sys
+
+
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
@@ -10,8 +12,12 @@ from rule.rule_mng import RuleMng
 from config import RULE_LOG_PATH, RULE_LOG_LEVEL
 from log.log import MyLog
 from rpc_call.client import DevCall
+from command.dev_cmd_record import CmdRecorder
+from rule.dev_attribute_mng import DevAttributeMng
 
-MyLog.init(is_enable_std=False, log_period = 7, level = RULE_LOG_LEVEL, path = RULE_LOG_PATH)
+MyLog.init(is_enable_std=False, log_period=7, level=RULE_LOG_LEVEL, path=RULE_LOG_PATH)
+
+
 def main():
     msg = MyLog.color_green('+++++++++规则引擎启动+++++++++')
     MyLog.logger.info(msg)
@@ -23,6 +29,8 @@ def main():
     msg = MyLog.color_green('管理服务已就就绪')
     set_service_ready()
     MyLog.logger.info(msg)
+
+    DevAttributeMng.restore_devices_when_start_up()
     RuleMng.timer_rule_decision()
     while True:
         time.sleep(3600)

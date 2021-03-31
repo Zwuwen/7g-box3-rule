@@ -3,8 +3,11 @@ import sys
 import os
 import datetime
 import time
+from collections import defaultdict
+
 from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker, relationship
+
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
@@ -13,37 +16,40 @@ from config import RULE_SQLITE3_FILE_PATH, RULE_SQLITE3_FILE_NAME
 from db.sqlite_create import *
 from log.log import MyLog
 
+
 class SqliteMng:
     def __init__(self):
         if not hasattr(SqliteMng, "__sqlite_eng"):
             if not os.path.exists(RULE_SQLITE3_FILE_PATH):
                 os.makedirs(RULE_SQLITE3_FILE_PATH)
-            database = "sqlite:///%s?check_same_thread=False"%(RULE_SQLITE3_FILE_PATH + RULE_SQLITE3_FILE_NAME)
-            self.__sqlite_eng = create_engine(database, encoding = 'utf-8', echo = False)
+            database = "sqlite:///%s?check_same_thread=False" % (RULE_SQLITE3_FILE_PATH + RULE_SQLITE3_FILE_NAME)
+            self.__sqlite_eng = create_engine(database, encoding='utf-8', echo=False)
             create_all_tbl(self.__sqlite_eng)
-            self.__session_class = sessionmaker(bind = self.__sqlite_eng)
+            self.__session_class = sessionmaker(bind=self.__sqlite_eng)
             self.__session = self.__session_class()
 
     def __new__(cls, *args, **kwargs):
-        #单例
+        # 单例
         if not hasattr(SqliteMng, "_instance"):
             SqliteMng._instance = object.__new__(cls)
         return SqliteMng._instance
 
-    def add_rule(self, uuid, enable, type, priority, date_list, time_list, src_dev_list, dst_dev_list, script_path, py_path):
+    def add_rule(self, uuid, enable, type, priority, date_list, time_list, src_dev_list, dst_dev_list, script_path,
+                 py_path):
         try:
             if (type != 'timer' and type != 'linkage') or (priority < 0 or priority > 99):
-                #参数错误
+                # 参数错误
                 msg = MyLog.color_red('添加规则参数错误')
                 MyLog.logger.error(msg)
                 return False
             ret = self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).all()
             if (ret):
-                #资源已存在
+                # 资源已存在
                 msg = MyLog.color_red('规则uuid已存在')
                 MyLog.logger.error(msg)
                 return False
-            element = rule_main_tbl(uuid=uuid, enable=enable, type=type, priority=priority, script_path=script_path, py_path=py_path)
+            element = rule_main_tbl(uuid=uuid, enable=enable, type=type, priority=priority, script_path=script_path,
+                                    py_path=py_path)
             self.__session.add(element)
 
             for d in date_list:
@@ -101,7 +107,7 @@ class SqliteMng:
             if main_sql:
                 if main_sql[0].enable == 0:
                     enable = False
-    
+
                 type = main_sql[0].type
                 priority = main_sql[0].priority
                 script_path = main_sql[0].script_path
@@ -130,8 +136,9 @@ class SqliteMng:
             for dev in dst_dev_sql:
                 dst_dev_list.append(dev.dst_device)
 
-            return True, {'enable':enable, 'type':type, 'priority':priority, 'date_list':date_list, \
-                'time_list':time_list, 'src_dev_list':src_dev_list, 'dst_dev_list':dst_dev_list, 'script_path':script_path}
+            return True, {'enable': enable, 'type': type, 'priority': priority, 'date_list': date_list, \
+                          'time_list': time_list, 'src_dev_list': src_dev_list, 'dst_dev_list': dst_dev_list,
+                          'script_path': script_path}
         except Exception as e:
             msg = MyLog.color_red("get_rule has except: " + str(e))
             MyLog.logger.error(msg)
@@ -181,7 +188,7 @@ class SqliteMng:
     def set_rule_enable(self, uuid_dict):
         try:
             for uuid in uuid_dict:
-                self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).update({'enable':True})
+                self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).update({'enable': True})
             self.__session.commit()
             return True
         except Exception as e:
@@ -192,7 +199,7 @@ class SqliteMng:
     def set_rule_disable(self, uuid_dict):
         try:
             for uuid in uuid_dict:
-                self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).update({'enable':False})
+                self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).update({'enable': False})
             self.__session.commit()
             return True
         except Exception as e:
@@ -200,8 +207,8 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return False
 
-    #获取指定规则的优先级，成功返回优先级，失败返回-1
-    def get_priority_by_uuid(self, uuid)->int:
+    # 获取指定规则的优先级，成功返回优先级，失败返回-1
+    def get_priority_by_uuid(self, uuid) -> int:
         try:
             main_sql = self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).all()
             for info in main_sql:
@@ -212,8 +219,8 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return -1
 
-    #获取指定规则的类型
-    def get_type_by_uuid(self, uuid)->str:
+    # 获取指定规则的类型
+    def get_type_by_uuid(self, uuid) -> str:
         try:
             main_sql = self.__session.query(rule_main_tbl).filter(rule_main_tbl.uuid == uuid).all()
             for info in main_sql:
@@ -224,7 +231,7 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return None
 
-    #筛选出当前时间点可以执行的定时规则，筛选条件：规则enable并且当前的日期时间在规则时间内
+    # 筛选出当前时间点可以执行的定时规则，筛选条件：规则enable并且当前的日期时间在规则时间内
     def get_current_timer_rule(self):
         uuid_list = []
         try:
@@ -239,28 +246,28 @@ class SqliteMng:
                     and_(
                         rule_main_tbl.enable == True,
                         rule_main_tbl.type == 'timer',
-                        rule_date_tbl.start_date <= current_date, 
+                        rule_date_tbl.start_date <= current_date,
                         current_date <= rule_date_tbl.end_date
                     ),
                     or_(
                         and_(
-                            rule_time_tbl.start_time <= current_time, 
+                            rule_time_tbl.start_time <= current_time,
                             current_time <= rule_time_tbl.end_time
                         ),
-                        and_(#跨天
-                            rule_time_tbl.start_time >= rule_time_tbl.end_time, 
+                        and_(  # 跨天
+                            rule_time_tbl.start_time >= rule_time_tbl.end_time,
                             current_time >= rule_time_tbl.start_time
                         ),
-                        and_(#跨天
-                            rule_time_tbl.start_time >= rule_time_tbl.end_time, 
+                        and_(  # 跨天
+                            rule_time_tbl.start_time >= rule_time_tbl.end_time,
                             current_time <= rule_time_tbl.end_time
                         )
                     )
                 )
             }
-            main_sql = self.__session.query(rule_main_tbl).join(rule_date_tbl, rule_date_tbl.uuid==rule_main_tbl.uuid)\
-            .join(rule_time_tbl, rule_time_tbl.uuid==rule_main_tbl.uuid)\
-            .filter(*rule_filter).all()
+            main_sql = self.__session.query(rule_main_tbl).join(rule_date_tbl, rule_date_tbl.uuid == rule_main_tbl.uuid) \
+                .join(rule_time_tbl, rule_time_tbl.uuid == rule_main_tbl.uuid) \
+                .filter(*rule_filter).all()
             for info in main_sql:
                 MyLog.logger.info('查找到当前时间点可用的规则，规则uuid为: ' + info.uuid)
                 uuid_list.append(info.uuid)
@@ -271,14 +278,13 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return []
 
-
-    #筛选出所有可用的定时规则的时间列表
+    # 筛选出所有可用的定时规则的时间列表
     def get_all_enable_timer_rule_time_list(self):
         time_list = []
         try:
-            main_sql = self.__session.query(rule_main_tbl)\
-            .join(rule_time_tbl, rule_time_tbl.uuid==rule_main_tbl.uuid)\
-            .filter(rule_main_tbl.enable == True, rule_main_tbl.type == 'timer').all()
+            main_sql = self.__session.query(rule_main_tbl) \
+                .join(rule_time_tbl, rule_time_tbl.uuid == rule_main_tbl.uuid) \
+                .filter(rule_main_tbl.enable == True, rule_main_tbl.type == 'timer').all()
 
             for info in main_sql:
                 time_sql = self.__session.query(rule_time_tbl).filter(rule_time_tbl.uuid == info.uuid).all()
@@ -291,7 +297,7 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return []
 
-    #通过uuid获取规则的日期时间列表
+    # 通过uuid获取规则的日期时间列表
     def get_date_time_by_uuid(self, uuid):
         date_list = []
         time_list = []
@@ -314,19 +320,19 @@ class SqliteMng:
             MyLog.logger.error(msg)
             return date_list, time_list
 
-    #筛选出触发原设备包含指定设备id并且当前时间点可以执行的联动规则，筛选条件：规则enable并且当前的日期时间在规则时间内
+    # 筛选出触发原设备包含指定设备id并且当前时间点可以执行的联动规则，筛选条件：规则enable并且当前的日期时间在规则时间内
     def get_current_linkage_rule_by_src_devid(self, src_dev_id):
         uuid_list = []
         try:
             current_date = datetime.date.today()
             current_time = datetime.datetime.now().strftime("%H:%M:%S.%f")
-            MyLog.logger.info("current time: %s"%(current_time))
+            MyLog.logger.info("current time: %s" % (current_time))
             rule_filter = {
                 and_(
                     and_(
                         rule_main_tbl.enable == True,
                         rule_main_tbl.type == 'linkage',
-                        rule_date_tbl.start_date <= current_date, 
+                        rule_date_tbl.start_date <= current_date,
                         current_date <= rule_date_tbl.end_date
                     ),
                     and_(
@@ -334,24 +340,24 @@ class SqliteMng:
                     ),
                     or_(
                         and_(
-                            rule_time_tbl.start_time <= current_time, 
+                            rule_time_tbl.start_time <= current_time,
                             current_time <= rule_time_tbl.end_time
                         ),
-                        and_(#跨天
-                            rule_time_tbl.start_time >= rule_time_tbl.end_time, 
+                        and_(  # 跨天
+                            rule_time_tbl.start_time >= rule_time_tbl.end_time,
                             current_time >= rule_time_tbl.start_time
                         ),
-                        and_(#跨天
-                            rule_time_tbl.start_time >= rule_time_tbl.end_time, 
+                        and_(  # 跨天
+                            rule_time_tbl.start_time >= rule_time_tbl.end_time,
                             current_time <= rule_time_tbl.end_time
                         )
                     )
                 )
             }
-            main_sql = self.__session.query(rule_main_tbl).join(rule_date_tbl, rule_date_tbl.uuid==rule_main_tbl.uuid)\
-            .join(rule_time_tbl, rule_time_tbl.uuid==rule_main_tbl.uuid)\
-            .join(rule_src_device_tbl, rule_src_device_tbl.uuid==rule_main_tbl.uuid)\
-            .filter(*rule_filter).all()
+            main_sql = self.__session.query(rule_main_tbl).join(rule_date_tbl, rule_date_tbl.uuid == rule_main_tbl.uuid) \
+                .join(rule_time_tbl, rule_time_tbl.uuid == rule_main_tbl.uuid) \
+                .join(rule_src_device_tbl, rule_src_device_tbl.uuid == rule_main_tbl.uuid) \
+                .filter(*rule_filter).all()
             for info in main_sql:
                 uuid_list.append(info.uuid)
 
@@ -360,3 +366,36 @@ class SqliteMng:
             msg = MyLog.color_red("get_current_linkage_rule_by_src_devid has except: " + str(e))
             MyLog.logger.error(msg)
             return []
+
+    def add_run_cmd_tbl(self, dev_id, cmd_list):
+        cmd_str = ' '.join(list(cmd_list))
+        cmd_str_dic = dict(cmd_list=cmd_str)
+        element = self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).first()
+        if element:
+            self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).update(
+                cmd_str_dic)
+        else:
+            element = rule_command_run_tbl(device_id=dev_id, cmd_list=cmd_str)
+            self.__session.add(element)
+        self.__session.commit()
+
+    def get_all_device_run_cmd(self):
+        cmd_list = defaultdict(set)
+        element_list = self.__session.query(rule_command_run_tbl).all()
+        for element in element_list:
+            MyLog.logger.info(f'cmd list in db:{element.cmd_list},{set(element.cmd_list.split(" "))}')
+            cmd_list[element.device_id] = set(element.cmd_list.split(" "))
+        return cmd_list
+
+    def del_run_cmd_record(self, dev_id):
+        self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).delete()
+        self.__session.commit()
+
+
+def main():
+    b = SqliteMng()
+    b.add_run_cmd_tbl('cc', ['Abb', "Acc"])
+
+
+if __name__ == '__main__':
+    main()
