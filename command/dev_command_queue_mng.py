@@ -70,6 +70,7 @@ class DevCommandQueueMng:
             elif running_command:
                 # 判断是否为同一个规则指令，如果不是才允许执行
                 MyLog.logger.info('running_command: %s, command:%s' % (running_command.uuid, command.uuid))
+                MyLog.logger.info(f'running_command_effective:{running_command.effective}')
                 if not running_command.effective or running_command.uuid != command.uuid:
                     need_exe = True
                 else:

@@ -368,28 +368,37 @@ class SqliteMng:
             return []
 
     def add_run_cmd_tbl(self, dev_id, cmd_list):
-        cmd_str = ' '.join(list(cmd_list))
-        cmd_str_dic = dict(cmd_list=cmd_str)
-        element = self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).first()
-        if element:
-            self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).update(
-                cmd_str_dic)
-        else:
-            element = rule_command_run_tbl(device_id=dev_id, cmd_list=cmd_str)
-            self.__session.add(element)
-        self.__session.commit()
+        try:
+            cmd_str = ' '.join(list(cmd_list))
+            cmd_str_dic = dict(cmd_list=cmd_str)
+            element = self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).first()
+            if element:
+                self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).update(
+                    cmd_str_dic)
+            else:
+                element = rule_command_run_tbl(device_id=dev_id, cmd_list=cmd_str)
+                self.__session.add(element)
+            self.__session.commit()
+        except Exception as e:
+            MyLog.logger.error(f'db add operation except:{e}')
 
     def get_all_device_run_cmd(self):
-        cmd_list = defaultdict(set)
-        element_list = self.__session.query(rule_command_run_tbl).all()
-        for element in element_list:
-            MyLog.logger.info(f'cmd list in db:{element.cmd_list},{set(element.cmd_list.split(" "))}')
-            cmd_list[element.device_id] = set(element.cmd_list.split(" "))
-        return cmd_list
+        try:
+            cmd_list = defaultdict(set)
+            element_list = self.__session.query(rule_command_run_tbl).all()
+            for element in element_list:
+                MyLog.logger.info(f'cmd list in db:{element.cmd_list},{set(element.cmd_list.split(" "))}')
+                cmd_list[element.device_id] = set(element.cmd_list.split(" "))
+            return cmd_list
+        except Exception as e:
+            MyLog.logger.error(f'db get all operation except:{e}')
 
     def del_run_cmd_record(self, dev_id):
-        self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).delete()
-        self.__session.commit()
+        try:
+            self.__session.query(rule_command_run_tbl).filter(rule_command_run_tbl.device_id == dev_id).delete()
+            self.__session.commit()
+        except Exception as e:
+            MyLog.logger.error(f'db delete operation except:{e}')
 
 
 def main():

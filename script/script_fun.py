@@ -155,20 +155,20 @@ def get_attribute_value(key_list):
         attr_name_t = key_list[3]
 
         name, index = EventHandle.get_array_name_and_index(attr_name_t)
-        MyLog.logger.info(f'attrs_dict in DevAttributeMng:{DevAttributeMng.dev_now_attributes}')
         if index is not None:
-            attrs_dict = DevAttributeMng.get_dev_attr_item(dev_id=dev_id, attr_name=name)
-            if not attrs_dict:
+            attrs_dict = DevAttributeMng.get_dev_attr_value(dev_id=dev_id, attr_name=name)
+            if attrs_dict is None:
+                MyLog.logger.warning(f'🈚attrs_dict not in DevAttributeMng', 'warn')
                 attrs_dict = DevCall.get_attributes(dev_id, name)
             if attrs_dict:
                 attrs_dict = attrs_dict[index]
         else:
-            attrs_dict = DevAttributeMng.get_dev_attr_item(dev_id=dev_id, attr_name=attr_name_t)
-            if not attrs_dict:
+            attrs_dict = DevAttributeMng.get_dev_attr_value(dev_id=dev_id, attr_name=attr_name_t)
+            if attrs_dict is None:
+                MyLog.logger.warning(f'🈚attrs_dict not in DevAttributeMng')
                 attrs_dict = DevCall.get_attributes(dev_id, attr_name_t)
 
         if attrs_dict is not None:
-            MyLog.logger.debug(f'key_list:{key_list}')
             for key_index in range(4, len(key_list)):
                 key = key_list[key_index]
                 name, index = EventHandle.get_array_name_and_index(key)
@@ -176,7 +176,6 @@ def get_attribute_value(key_list):
                     attrs_dict = attrs_dict[name][index]
                 else:
                     attrs_dict = attrs_dict[key]
-            MyLog.logger.debug(f'attrs_dict:{attrs_dict}')
             return attrs_dict
         else:
             return None

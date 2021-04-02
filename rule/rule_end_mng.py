@@ -12,7 +12,7 @@ from command.dev_command_queue_mng import DevCommandQueueMng
 from log.log import MyLog
 from locker.redis_locker import RedisLock
 
-#记录正在执行的规则uuid:结束时间戳字典列表 [{"uuid":"", "end_ts":12345}]
+# 记录正在执行的规则uuid:结束时间戳字典列表 [{"uuid":"", "end_ts":12345}]
 g_running_rule_endtime_list = []
 g_running_rule_endtime_handle_timer = None
 g_lk = RedisLock("rule_end_mng")
@@ -23,11 +23,14 @@ def running_rule_endtime_handle():
     current_ts = time.time()
     smallest_ts = 0
     uuid_list = []
+    to_del_rule = []
     g_lk.acquire()
     for rule in g_running_rule_endtime_list:
+        MyLog.logger.info(f'rule:{rule}')
         if rule['end_ts'] < current_ts:
-            MyLog.logger.info("规则(%s)结束"%(rule['uuid']))
-            g_running_rule_endtime_list.remove(rule)
+            MyLog.logger.info("规则(%s)结束" % (rule['uuid']))
+            # g_running_rule_endtime_list.remove(rule) # 遍历列表过程中改变列表size!!!
+            to_del_rule.append(rule)
             uuid_list.append(rule['uuid'])
             # 上报规则结束事件
             EventReport.report_rule_end_event(rule['uuid'])
@@ -36,7 +39,12 @@ def running_rule_endtime_handle():
                 smallest_ts = rule['end_ts']
             elif rule['end_ts'] < smallest_ts:
                 smallest_ts = rule['end_ts']
+
+    # to fix the bug referred above
+    for del_rule in to_del_rule:
+        g_running_rule_endtime_list.remove(del_rule)
     g_lk.release()
+
     if uuid_list:
         # 删除结束规则的指令
         DevCommandQueueMng.clear_command_by_rule_uuid(uuid_list)
@@ -52,7 +60,10 @@ def running_rule_endtime_handle():
         g_running_rule_endtime_handle_timer = Timer(ts, running_rule_endtime_handle)
         g_running_rule_endtime_handle_timer.start()
 
+
 '''uuid_end_ts_list = [{"uuid":"", "end_ts":12345}]'''
+
+
 def add_running_rule_endtime(uuid_end_ts_list):
     g_lk.acquire()
     for i in range(len(uuid_end_ts_list)):
@@ -75,6 +86,7 @@ def add_running_rule_endtime(uuid_end_ts_list):
     g_running_rule_endtime_handle_timer = Timer(0, running_rule_endtime_handle)
     g_running_rule_endtime_handle_timer.start()
 
+
 def remove_running_rule_endtime(uuid_list):
     g_lk.acquire()
     for uuid in uuid_list:
@@ -90,6 +102,7 @@ def remove_running_rule_endtime(uuid_list):
 
     g_running_rule_endtime_handle_timer = Timer(0, running_rule_endtime_handle)
     g_running_rule_endtime_handle_timer.start()
+
 
 def clear_all_running_rule_endtime():
     g_lk.acquire()

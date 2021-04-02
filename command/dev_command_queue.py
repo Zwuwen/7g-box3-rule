@@ -1,8 +1,10 @@
 __date__ = '2020/10/28'
 __author__ = 'wanghaiquan'
+
 import os
 import sys
 import time
+
 cur_dir = os.getcwd()
 pre_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))
 sys.path.append(cur_dir)
@@ -11,46 +13,48 @@ from locker.redis_locker import RedisLock
 from command.command_info import CommandInfo
 from log.log import MyLog
 
-#设备指令队列，DevCommandQueue表示一个设备的所有指令
+
+# 设备指令队列，DevCommandQueue表示一个设备的所有指令
 class DevCommandQueue:
     def __init__(self, product_id, dev_id):
         self.__product_id = product_id
         self.__dev_id = dev_id
-        #每个指令一个子队列[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
+        # 每个指令一个子队列[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
         self.__queues = []
         self.__lock = RedisLock(f"DevCommandQueue_{dev_id}")
 
     @property
-    def dev_id(self)->str:
+    def dev_id(self) -> str:
         return self.__dev_id
 
     @property
-    def product_id(self)->str:
+    def product_id(self) -> str:
         return self.__product_id
 
-    #添加定时规则指令列表
-    def add_timer_command_list(self, command_list)->None:
+    # 添加定时规则指令列表
+    def add_timer_command_list(self, command_list) -> None:
         self.__lock.acquire()
-        MyLog.logger.info('添加定时指令列表到队列，列表长度: %d'%(len(command_list)))
+        MyLog.logger.info('添加定时指令列表到队列，列表长度: %d' % (len(command_list)))
         for command in command_list:
             command.type = 'timer'
             is_new_command = True
             for queue in self.__queues:
                 if 'command_name' in queue and queue['command_name'] == command.command:
-                    MyLog.logger.info(f"添加定时指令({command.command})到指令列表, uuid:{command.uuid} priority:{command.priority}")
-                    #判断是否已经有相同uuid的指令存在
+                    MyLog.logger.info(
+                        f"添加定时指令({command.command})到指令列表, uuid:{command.uuid} priority:{command.priority}")
+                    # 判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
                     for i in range(len(queue['command_queue'])):
                         if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
-                            #更新
+                            # 更新
                             queue['command_queue'][i] = command
                             MyLog.logger.info(f"更新定时指令({command.command})")
                             break
 
                     if not uuid_has_exist:
-                        #新加
+                        # 新加
                         MyLog.logger.info(f"新加定时指令({command.command})")
                         queue['command_queue'].append(command)
                     break
@@ -64,26 +68,26 @@ class DevCommandQueue:
                 self.__queues.append(new_command_sub_queue)
         self.__lock.release()
 
-    #添加联动规则指令列表
-    def add_linkage_command_list(self, command_list)->None:
+    # 添加联动规则指令列表
+    def add_linkage_command_list(self, command_list) -> None:
         self.__lock.acquire()
         for command in command_list:
             command.type = 'linkage'
             is_new_command = True
             for queue in self.__queues:
                 if 'command_name' in queue and queue['command_name'] == command.command:
-                    #判断是否已经有相同uuid的指令存在
+                    # 判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
                     for i in range(len(queue['command_queue'])):
                         if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
-                            #更新
+                            # 更新
                             queue['command_queue'][i] = command
                             break
 
                     if not uuid_has_exist:
-                        #新加
+                        # 新加
                         queue['command_queue'].append(command)
             if is_new_command:
                 new_command_sub_queue = {}
@@ -94,9 +98,9 @@ class DevCommandQueue:
                 self.__queues.append(new_command_sub_queue)
         self.__lock.release()
 
-    #添加临时手动指令列表
-    #每个指令一个子队列[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
-    def add_manual_command_list(self, command_list)->None:
+    # 添加临时手动指令列表
+    # 每个指令一个子队列[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
+    def add_manual_command_list(self, command_list) -> None:
         self.__lock.acquire()
         for command in command_list:
             command.type = 'manual'
@@ -104,18 +108,18 @@ class DevCommandQueue:
             is_new_command = True
             for queue in self.__queues:
                 if 'command_name' in queue and queue['command_name'] == command.command:
-                    #判断是否已经有相同uuid的指令存在
+                    # 判断是否已经有相同uuid的指令存在
                     uuid_has_exist = False
                     is_new_command = False
                     for i in range(len(queue['command_queue'])):
                         if queue['command_queue'][i].uuid == command.uuid:
                             uuid_has_exist = True
-                            #更新
+                            # 更新
                             queue['command_queue'][i] = command
                             break
 
                     if not uuid_has_exist:
-                        #新加
+                        # 新加
                         queue['command_queue'].append(command)
             if is_new_command:
                 new_command_sub_queue = {}
@@ -126,9 +130,9 @@ class DevCommandQueue:
                 self.__queues.append(new_command_sub_queue)
         self.__lock.release()
 
-    #设置某类指令当前正在执行哪个指令
-    #[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
-    def set_current_running_command(self, command_name, command)->None:
+    # 设置某类指令当前正在执行哪个指令
+    # [{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
+    def set_current_running_command(self, command_name, command) -> None:
         self.__lock.acquire()
         is_command_exist = False
         for i in range(len(self.__queues)):
@@ -145,8 +149,8 @@ class DevCommandQueue:
             self.__queues.append(new_command_sub_queue)
         self.__lock.release()
 
-    #获取当前某个指令名称正在执行的指令
-    def get_current_running_command(self, command_name)->CommandInfo:
+    # 获取当前某个指令名称正在执行的指令
+    def get_current_running_command(self, command_name) -> CommandInfo:
         self.__lock.acquire()
         for queue in self.__queues:
             if queue['command_name'] == command_name:
@@ -155,8 +159,8 @@ class DevCommandQueue:
         self.__lock.release()
         return None
 
-    #获取指令名称列表
-    def get_all_command_name_list(self)->list:
+    # 获取指令名称列表
+    def get_all_command_name_list(self) -> list:
         command_name_list = []
         self.__lock.acquire()
         for queue in self.__queues:
@@ -165,15 +169,15 @@ class DevCommandQueue:
         self.__lock.release()
         return command_name_list
 
-    #获取每种指令中优先级最高的指令
-    def get_highest_priority_command_list(self)->list:
+    # 获取每种指令中优先级最高的指令
+    def get_highest_priority_command_list(self) -> list:
         command_list = []
         self.__lock.acquire()
         for queue in self.__queues:
             command = self.get_highest_priority_command_by_command_name(queue['command_name'])
             if command:
-                MyLog.logger.info('获取设备(%s)指令队列中最高优先级的指令(%s), 规则uuid为: %s, 优先级为:%d'\
-                %(self.__dev_id, queue['command_name'], command.uuid, command.priority))
+                MyLog.logger.info('获取设备(%s)指令队列中最高优先级的指令(%s), 规则uuid为: %s, 优先级为:%d' \
+                                  % (self.__dev_id, queue['command_name'], command.uuid, command.priority))
                 command_list.append(command)
             else:
                 msg = MyLog.color_red("command is None")
@@ -183,25 +187,27 @@ class DevCommandQueue:
 
     ''' 根据指令获取当前时间点可以执行的优先级最高的指令
         如果该指令队列存在，但队列为空，则返回默认指令 '''
-    def get_highest_priority_command_by_command_name(self, command_name)->CommandInfo:
+
+    def get_highest_priority_command_by_command_name(self, command_name) -> CommandInfo:
         ts = time.time()
-        MyLog.logger.info("get_highest_priority_command_by_command_name: %s"%(command_name))
-        #for queue in self.__queues:
+        MyLog.logger.info("get_highest_priority_command_by_command_name: %s" % (command_name))
+        # for queue in self.__queues:
         for i in range(len(self.__queues)):
-            highest_command:CommandInfo = None
+            highest_command: CommandInfo = None
             queue = self.__queues[i]
             if 'command_name' in queue and queue['command_name'] == command_name:
-                command_queue:list = queue["command_queue"]
+                command_queue: list = queue["command_queue"]
                 if command_queue:
                     MyLog.logger.info(f"find the highest priority command({command_name})")
                     del_command_list = []
                     for command in command_queue:
                         if command.start_ts > ts or command.end_ts < ts:
-                            #指令不在有效期内，删除
+                            # 指令不在有效期内，删除
                             del_command_list.append(command)
                             continue
                         if highest_command == None or command.priority > highest_command.priority:
-                            MyLog.logger.info(f"new highest_command uuid:{command.uuid}, priority:{command.priority}, type:{command.type}")
+                            MyLog.logger.info(
+                                f"new highest_command uuid:{command.uuid}, priority:{command.priority}, type:{command.type}")
                             highest_command = command
                     for del_command in del_command_list:
                         command_queue.remove(del_command)
@@ -215,7 +221,8 @@ class DevCommandQueue:
 
     ''' 获取距离当前时间点最近指令时间点（start_ts，end_ts）
         成功返回最近的时间戳，失败返回0 '''
-    def get_nearest_ts(self)->float:
+
+    def get_nearest_ts(self) -> float:
         self.__lock.acquire()
         ts = time.time()
         nearest_ts = 2236761304
@@ -223,7 +230,7 @@ class DevCommandQueue:
         for i in range(len(self.__queues)):
             queue = self.__queues[i]
             if 'command_queue' in queue:
-                command_queue:list = queue["command_queue"]
+                command_queue: list = queue["command_queue"]
                 for command in command_queue:
                     if command.start_ts > ts:
                         if command.start_ts < nearest_ts:
@@ -238,14 +245,14 @@ class DevCommandQueue:
             self.__lock.release()
             return nearest_ts
 
-    #清空指定规则的所有指令
-    #[{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
-    def clear_command_by_rule_uuid(self, uuid_list)->None:
+    # 清空指定规则的所有指令
+    # [{"command_name":"", "command_queue":[], "current_command":CommandInfo}]
+    def clear_command_by_rule_uuid(self, uuid_list) -> None:
         self.__lock.acquire()
         for uuid in uuid_list:
             for i in range(len(self.__queues)):
                 queue = self.__queues[i]
-                command_queue:list = queue['command_queue']
+                command_queue: list = queue['command_queue']
                 for command in command_queue:
                     if command.uuid == uuid:
                         command_queue.remove(command)
@@ -254,20 +261,20 @@ class DevCommandQueue:
                             queue['current_command'].effective = False
         self.__lock.release()
 
-    #清空所有指令
-    def clear_all_command(self)->None:
+    # 清空所有指令
+    def clear_all_command(self) -> None:
         self.__lock.acquire()
         for queue in self.__queues:
             queue['command_queue'].clear()
         self.__lock.release()
 
-    #删除指定服务的手动指令
-    def clear_manual_command(self, command_name)->None:
+    # 删除指定服务的手动指令
+    def clear_manual_command(self, command_name) -> None:
         self.__lock.acquire()
         for i in range(len(self.__queues)):
             queue = self.__queues[i]
             if queue['command_name'] == command_name:
-                command_queue:list = queue['command_queue']
+                command_queue: list = queue['command_queue']
                 for command in command_queue:
                     if command.type == 'manual':
                         command_queue.remove(command)
@@ -277,13 +284,13 @@ class DevCommandQueue:
                 break
         self.__lock.release()
 
-    #删除指定指令名称队列中的联动规则的指令
-    def clear_linkage_command(self, command_name)->None:
+    # 删除指定指令名称队列中的联动规则的指令
+    def clear_linkage_command(self, command_name) -> None:
         self.__lock.acquire()
         for i in range(len(self.__queues)):
             queue = self.__queues[i]
             if queue['command_name'] == command_name:
-                command_queue:list = queue['command_queue']
+                command_queue: list = queue['command_queue']
                 for command in command_queue:
                     if command.type == 'linkage':
                         command_queue.remove(command)
@@ -292,6 +299,7 @@ class DevCommandQueue:
                             queue['current_command'].effective = False
                 break
         self.__lock.release()
+
 
 if __name__ == "__main__":
     c1 = CommandInfo('uuid1', 'command_name1', 'params1', 1603887074, 1603897074, 99)
@@ -306,5 +314,3 @@ if __name__ == "__main__":
         print(c.priority)
     else:
         print("c is none")
-
-

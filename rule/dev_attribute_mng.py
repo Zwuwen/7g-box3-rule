@@ -15,7 +15,24 @@ class DevAttributeMng:
     dev_now_attributes = dict()
 
     @classmethod
-    def restore_device_status(cls, dev_id, cmd_list):
+    def restore_devices_when_start_up(cls):
+        """
+
+        Returns:
+
+        """
+        try:
+            MyLog.logger.debug(f'restore_devices_when_start_up()')
+            CmdRecorder.load_data()
+            for dev_id, cmd_list in CmdRecorder.dev_run_cmd.items():
+                cls.__restore_device_status(dev_id=dev_id, cmd_list=cmd_list)
+            CmdRecorder.clear_data()
+            MyLog.logger.debug(f'restore_devices_when_start_up finish')
+        except Exception as e:
+            MyLog.logger.error(f'restore_device_when_start up except:{e}')
+
+    @classmethod
+    def __restore_device_status(cls, dev_id, cmd_list):
         """
 
         Args:
@@ -31,20 +48,6 @@ class DevAttributeMng:
         MyLog.logger.debug(f'restore_device_status{dev_id, cmd_list}...return')
 
     @classmethod
-    def restore_devices_when_start_up(cls):
-        """
-
-        Returns:
-
-        """
-        MyLog.logger.debug(f'restore_devices_when_start_up()')
-        CmdRecorder.load_data()
-        for dev_id, cmd_list in CmdRecorder.dev_run_cmd.items():
-            cls.restore_device_status(dev_id=dev_id, cmd_list=cmd_list)
-        CmdRecorder.clear_data()
-        MyLog.logger.debug(f'restore_devices_when_start_up finish')
-
-    @classmethod
     def update_dev_now_attributes(cls, dev_id, attr_dict):
         """
 
@@ -58,16 +61,19 @@ class DevAttributeMng:
 
         # MyLog.logger.debug(f'update_dev_now_attributes{dev_id, attr_dict}')
 
-        attr_dict_b = cls.dev_now_attributes.get(dev_id, {})
+        # MyLog.logger.debug(f'before:dev_now_attributes: {cls.dev_now_attributes}')
+        try:
+            attr_dict_b = cls.dev_now_attributes.get(dev_id, {})
+            attr_dict_n = {**attr_dict_b, **attr_dict}
+            cls.dev_now_attributes[dev_id] = attr_dict_n
 
-        attr_dict_n = {**attr_dict_b, **attr_dict}
-        cls.dev_now_attributes[dev_id] = attr_dict_n
-
-        # MyLog.logger.debug(f'✔️dev_now_attributes: {cls.dev_now_attributes}')
-        MyLog.logger.debug(f'update_dev_now_attributes:return')
+            # MyLog.logger.debug(f'✔️dev_now_attributes: {cls.dev_now_attributes}')
+            MyLog.logger.debug(f'update_dev_now_attributes:return')
+        except Exception as e:
+            MyLog.logger.error(f'update_dev_now_attributes except:{e}')
 
     @classmethod
-    def get_dev_attr_item(cls, dev_id, attr_name):
+    def get_dev_attr_value(cls, dev_id, attr_name):
         """
 
         Args:
@@ -78,11 +84,7 @@ class DevAttributeMng:
 
         """
         MyLog.logger.debug(f'get_dev_attr_item{dev_id, attr_name}')
-        attr_value = cls.dev_now_attributes.get(dev_id, None).get(attr_name, None)
-        # if attr_value is not None:
-        #     attr_item = {attr_name: attr_value}
-        # else:
-        #     attr_item = {}
+        attr_value = cls.dev_now_attributes.get(dev_id, {}).get(attr_name, None)
         MyLog.logger.debug(f'get_dev_attr_item{dev_id, attr_name}...return:{attr_value}')
 
         return attr_value

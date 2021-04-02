@@ -30,6 +30,7 @@ def main():
     set_service_ready()
     MyLog.logger.info(msg)
 
+    # 恢复设备之前联动过程中没有恢复的指令
     DevAttributeMng.restore_devices_when_start_up()
     RuleMng.timer_rule_decision()
     while True:
